@@ -55,6 +55,8 @@ public class RenderPreviewTests
         if (failWrite) write.SetException(new IOException("Lost device."));
         else stop.Cancel();
         await run;
+        if (failWrite) Assert.IsType<IOException>(engine.LastWriteError);
+        else Assert.Null(engine.LastWriteError);
         Assert.Equal(0, timing.ActiveLeases);
     }
 
@@ -75,19 +77,26 @@ public class RenderPreviewTests
         var device = new GatedDevice();
         await using var engine = new RenderEngine(device, new Compositor(83), new QuietLog(), device.Profile, 240);
         engine.SetEffectLayers([new SolidLayer("base", new Rgb(200, 100, 50), KeyMask.All)]);
+        int firstFrameSignals = 0;
+        engine.FirstFrameSent += () => firstFrameSignals++;
         Task run = engine.RunAsync(stop.Token);
         try
         {
             var first = await device.Writes.Reader.ReadAsync(stop.Token);
             Assert.True(engine.LastSentFrame.IsEmpty);
+            Assert.Equal(0, firstFrameSignals);
+            Assert.Null(engine.LastFrameSentAt);
             engine.SetEffectLayers([new SolidLayer("base", new Rgb(0, 0, 255), KeyMask.All)]);
             first.SetResult();
             var second = await device.Writes.Reader.ReadAsync(stop.Token);
             var red = engine.LastSentFrame;
+            Assert.Equal(1, firstFrameSignals);
+            Assert.NotNull(engine.LastFrameSentAt);
             Assert.Equal(83, red.Length);
             Assert.All(red.ToArray(), p => Assert.Equal(new Rgb(200, 100, 50), p));
             second.SetResult();
             var third = await device.Writes.Reader.ReadAsync(stop.Token);
+            Assert.Equal(1, firstFrameSignals);
             Assert.All(engine.LastSentFrame.ToArray(), p => Assert.Equal(new Rgb(0, 0, 255), p));
             Assert.All(red.ToArray(), p => Assert.Equal(new Rgb(200, 100, 50), p));
         }

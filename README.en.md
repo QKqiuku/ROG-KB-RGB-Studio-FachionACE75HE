@@ -25,6 +25,7 @@ That led me to build ROG KB RGB Studio on an existing open-source project, focus
 - **My Effects library**: name and save complete compositions, load them like presets, then edit, save or delete them.
 - **ATK lighting gallery**: browse, preview and import matching-layout keyframe animations, sorted by newest or hottest.
 - **GIF animations**: Full imports, crops and converts GIFs; both versions play previously converted animations.
+- **Connection monitor**: distinguish missing devices, inaccessible interfaces and lighting conflicts, inspect lighting transmission, retry and copy diagnostics.
 - **Live previews**: the keyboard reflects the last successfully sent lighting frame, with an additional continuous canvas for music effects. Choose 15 / 30 / 45 / 60 FPS.
 - **Three UI languages**: Simplified Chinese, Traditional Chinese and English, selected from the system language.
 
@@ -66,5 +67,26 @@ Choose a package from [Releases](https://github.com/QKqiuku/ROG-KB-RGB-Studio-Fa
 - **Exit**: closing or minimizing hides the app to the tray while playback continues. Use Exit and Restore or tray Exit to stop and attempt to restore the original lighting.
 
 Exit normally before upgrading or switching between Full and Lite. Settings and assets are stored under `%LOCALAPPDATA%\RSS_II_RGB`; preserve that directory to keep your compositions and animations. See the [user guide](docs/USER-GUIDE.md) for more.
+
+## Connection troubleshooting
+
+Click **Connection monitor** beside the status indicator to inspect the connection state, last detected firmware, last successful lighting transmission, frame count, error and detected lighting programs. Connection details update every second while the panel is open. Use **Check again** to rescan running lighting programs.
+
+| Status or symptom | Meaning and action |
+| --- | --- |
+| Waiting for wired keyboard | No usable target device was found. Check that the model is the supported 75 HE, use a USB data cable, and check the port or reconnect the cable. |
+| Keyboard found; cannot open | The device was detected, but its control interface could not be opened. Confirm the administrator prompt was accepted, check other lighting tools and their background processes, then retry. |
+| Lighting control conflict | Software lighting mode is already active. Another controller may have enabled it, or an abnormal exit may have left it active. Reading firmware successfully does not mean lighting frames can be sent. |
+| Keyboard communication failed | A query or lighting write failed. Check the USB connection and the specific diagnostic error, then retry. |
+| An older version keeps searching | Older status text may hide control conflicts or communication failures. Update to a version with Connection monitor and follow the specific status. |
+
+For a lighting control conflict:
+
+1. Use Exit and Restore in this app and exit other keyboard-lighting tools. Check their background processes if necessary.
+2. Unplug and reconnect the keyboard USB cable to clear any residual control state.
+3. Open only this app. If it is still running, click Reconnect in the monitor. Reconnect retries the connection without forcing ownership.
+4. If the problem persists, use Copy diagnostics and include the result, keyboard model, Windows version and reproduction steps in your report.
+
+Detecting LightingService, Armoury Crate processes, OpenRGB or another listed program only means it is running; it does not prove that it owns the keyboard. This app does not automatically stop other programs or override an active software lighting mode. Connected status is shown only after the first complete lighting frame is sent successfully.
 
 Based on [bbfox0703/RSS_II_RGB](https://github.com/bbfox0703/RSS_II_RGB), licensed under [GPL-3.0](LICENSE). Not an official ASUS, ROG or ATK application.

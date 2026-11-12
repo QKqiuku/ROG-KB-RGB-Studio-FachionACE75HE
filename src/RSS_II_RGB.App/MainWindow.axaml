@@ -5,7 +5,7 @@
         Width="1480" Height="980" MinWidth="1040" MinHeight="760" WindowStartupLocation="CenterScreen">
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="26,18,26,12" RowSpacing="16" MaxWidth="1520" IsEnabled="{Binding !IsSavingUserPreset}">
         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="18">
-            <StackPanel Spacing="3">
+            <StackPanel Spacing="3" ClipToBounds="True">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Path Data="{StaticResource AppMarkGeometry}" Fill="{StaticResource RogAccentBrush}" Width="34" Height="34" Stretch="Uniform" VerticalAlignment="Center"/>
                     <TextBlock Text="{x:Static vm:AppConstants.AppTitle}" FontSize="22" FontWeight="SemiBold"/>
@@ -15,6 +15,22 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <Ellipse Fill="{Binding StatusBrush}" Width="8" Height="8"/>
                 <TextBlock Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" MaxWidth="300" TextWrapping="Wrap"/>
+                <Button Classes="quiet" Content="{x:Static vm:L.ConnectionMonitor}">
+                    <Button.Flyout>
+                        <Flyout FlyoutPresenterClasses="region-options" Opened="OnConnectionMonitorOpened" Closed="OnConnectionMonitorClosed" Placement="Bottom">
+                            <StackPanel Width="420" Spacing="12">
+                                <TextBlock Classes="section" Text="{x:Static vm:L.ConnectionMonitor}"/>
+                                <SelectableTextBlock Text="{Binding ConnectionDiagnostics}" TextWrapping="Wrap" FontSize="12"/>
+                                <WrapPanel>
+                                    <Button Classes="quiet" Foreground="#F0F2F6" Focusable="False" Content="{x:Static vm:L.ConnectionRetry}" Click="OnReconnect" IsEnabled="{Binding !IsConnected}" Margin="0,0,8,8"/>
+                                    <Button Classes="quiet" Foreground="#F0F2F6" Focusable="False" Content="{x:Static vm:L.ConnectionRefresh}" Click="OnCheckLightingControllers" Margin="0,0,8,8"/>
+                                    <Button Classes="quiet" Foreground="#F0F2F6" Focusable="False" Content="{x:Static vm:L.ConnectionCopy}" Click="OnCopyConnectionDiagnostics" Margin="0,0,0,8"/>
+                                </WrapPanel>
+                                <TextBlock Name="ConnectionCopyStatus" TextWrapping="Wrap" Classes="muted"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
                 <TextBlock Text="{x:Static vm:L.TargetFrameRateLabel}" FontSize="11" VerticalAlignment="Center" ToolTip.Tip="{x:Static vm:L.FrameRateHint}"/>
                 <ListBox Classes="frame-rate" ItemsSource="{Binding FrameRateOptions}" SelectedItem="{Binding TargetFps, Mode=TwoWay}"
                          SelectionMode="Single,AlwaysSelected" ToolTip.Tip="{x:Static vm:L.FrameRateHint}"

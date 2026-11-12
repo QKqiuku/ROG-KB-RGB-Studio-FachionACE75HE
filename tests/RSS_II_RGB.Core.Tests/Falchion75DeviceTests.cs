@@ -106,7 +106,7 @@ public class Falchion75DeviceTests
     {
         var stream = new KeyboardStream { SoftwareMode = 1 };
         var device = new Falchion75Device(stream);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => device.WriteFrameAsync(new LedFrame(83), TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<KeyboardConnectionException>(() => device.WriteFrameAsync(new LedFrame(83), TestContext.Current.CancellationToken));
         await device.DisposeAsync();
         Assert.Equal(1, stream.SoftwareMode);
         Assert.DoesNotContain(stream.Writes, r => r[1] == 0x74 || r[1] == 0xC0);

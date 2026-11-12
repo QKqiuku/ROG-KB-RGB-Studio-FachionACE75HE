@@ -56,7 +56,7 @@ public sealed class Falchion75Device : IKeyboardDevice
             await CommandAsync(CoreConstants.Falchion75QuerySoftwareMode, 0, ct).ConfigureAwait(false);
             if (_reply[5] != 0)
             {
-                throw new InvalidOperationException("Keyboard software mode is already active; close other lighting controllers.");
+                throw new KeyboardConnectionException(KeyboardConnectionIssue.SoftwareModeConflict, "Keyboard software mode is already active; close other lighting controllers.");
             }
             // Restore even if the mode-entry acknowledgement is lost.
             _restoreSoftwareMode = true;

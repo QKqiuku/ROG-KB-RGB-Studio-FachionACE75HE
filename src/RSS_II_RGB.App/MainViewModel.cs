@@ -80,7 +80,7 @@ internal sealed partial class MainViewModel : ObservableObject
     private ZoneEditorViewModel? _editor;
 
     public string DeviceName => _controller.Profile.Name.Replace(" (experimental)", "", StringComparison.Ordinal);
-    public IBrush StatusBrush => new SolidColorBrush(Color.Parse(IsConnected ? "#4CE6B5" : "#7E8798"));
+    public IBrush StatusBrush => new SolidColorBrush(Color.Parse(IsConnected ? "#4CE6B5" : _controller.ConnectionError is not null ? "#FFB454" : "#7E8798"));
     partial void OnIsConnectedChanged(bool value)
     {
         OnPropertyChanged(nameof(StatusBrush));
@@ -332,10 +332,11 @@ internal sealed partial class MainViewModel : ObservableObject
     private void OnControllerStateChanged() => Dispatcher.UIThread.Post(() =>
     {
         IsConnected = _controller.IsConnected;
+        OnPropertyChanged(nameof(StatusBrush));
         if (IsConnected) _controller.SetTargetFps(TargetFps);
         StatusText = _controller.IsConnected
             ? string.Format(CultureInfo.InvariantCulture, L.StatusConnectedFormat, _controller.Profile.Name, _controller.Firmware)
-            : L.StatusSearching;
+            : ConnectionFailureText(_controller.ConnectionError);
     });
 
     [RelayCommand]

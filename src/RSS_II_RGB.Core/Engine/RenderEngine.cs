@@ -57,6 +57,10 @@ public sealed class RenderEngine : IAsyncDisposable
 
     /// <summary>Frames streamed so far (diagnostics / FPS checks).</summary>
     public long FramesRendered { get; private set; }
+    public Exception? LastWriteError { get; private set; }
+    public event Action? FirstFrameSent;
+    private long _lastSentUtcTicks;
+    public DateTimeOffset? LastFrameSentAt => Interlocked.Read(ref _lastSentUtcTicks) is > 0 and var ticks ? new DateTimeOffset(ticks, TimeSpan.Zero) : null;
     private long _lastFrameElapsedTicks;
     public TimeSpan LastFrameElapsed=>TimeSpan.FromTicks(Interlocked.Read(ref _lastFrameElapsedTicks));
 
@@ -81,6 +85,7 @@ public sealed class RenderEngine : IAsyncDisposable
 
     public async Task RunAsync(CancellationToken ct)
     {
+        LastWriteError = null;
         using var timing = _timing?.Enter();
         int targetFps = TargetFps;
         var period = TimeSpan.FromSeconds(1.0 / targetFps);
@@ -117,7 +122,9 @@ public sealed class RenderEngine : IAsyncDisposable
                 // Publish only after every packet succeeds; the render buffer is reused next tick.
                 Volatile.Write(ref _lastSentFrame, output.Pixels.ToArray());
                 Interlocked.Exchange(ref _lastFrameElapsedTicks,now.Ticks);
+                Interlocked.Exchange(ref _lastSentUtcTicks, DateTimeOffset.UtcNow.Ticks);
                 FramesRendered++;
+                if (FramesRendered == 1) FirstFrameSent?.Invoke();
             }
             catch (OperationCanceledException)
             {
@@ -128,7 +135,8 @@ public sealed class RenderEngine : IAsyncDisposable
                 // A failed write means the device is gone (unplugged). Log once and
                 // stop the loop; the controller treats the engine exit as a lost
                 // device and re-enters its detect/reconnect poll.
-                _log.Log(LogLevel.Warning, "Keyboard write failed — device likely disconnected.", ex);
+                LastWriteError = ex;
+                _log.Log(LogLevel.Warning, "Keyboard lighting write failed.", ex);
                 break;
             }
 

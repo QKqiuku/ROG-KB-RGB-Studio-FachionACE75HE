@@ -39,8 +39,9 @@ public sealed class Win32KeyboardDeviceFactory : IKeyboardDeviceFactory
 
         if (handle.IsInvalid)
         {
+            int error = Marshal.GetLastWin32Error();
             handle.Dispose();
-            return Task.FromResult<IKeyboardDevice?>(null); // likely held by Armoury Crate / OpenRGB
+            throw new KeyboardConnectionException(KeyboardConnectionIssue.Unavailable, "Cannot open the keyboard control interface.", new Win32Exception(error));
         }
 
         var attributes = new NativeMethods.HIDD_ATTRIBUTES { Size = (uint)Unsafe.SizeOf<NativeMethods.HIDD_ATTRIBUTES>() };
@@ -158,7 +159,7 @@ public sealed class Win32KeyboardDeviceFactory : IKeyboardDeviceFactory
             0, NativeMethods.OPEN_EXISTING, 0, 0);
         if (h.IsInvalid)
         {
-            return false;
+            throw new KeyboardConnectionException(KeyboardConnectionIssue.Unavailable, "Cannot inspect the keyboard control interface.", new Win32Exception(Marshal.GetLastWin32Error()));
         }
 
         if (!NativeMethods.HidD_GetPreparsedData(h, out nint preparsed) || preparsed == 0)

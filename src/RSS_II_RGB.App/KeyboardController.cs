@@ -53,6 +53,22 @@ internal sealed class KeyboardController : IAsyncDisposable
     private CancellationTokenSource? _lifecycleCts;
     private Task? _lifecycleTask;
     private volatile bool _connected;
+    private readonly SemaphoreSlim _retryConnection = new(0, 1);
+    public Exception? ConnectionError { get; private set; }
+    public DateTimeOffset? LastConnectionAttemptAt { get; private set; }
+    private DateTimeOffset? _lastSuccessfulFrameAt;
+    public DateTimeOffset? LastSuccessfulFrameAt => _engine?.LastFrameSentAt ?? _lastSuccessfulFrameAt;
+    public string LastKnownFirmware { get; private set; } = "";
+    public void RequestReconnect()
+    {
+        if (_connected) return;
+        try { _retryConnection.Release(); } catch (SemaphoreFullException) { }
+    }
+    private async Task WaitToReconnectAsync(CancellationToken ct)
+    {
+        try { await _retryConnection.WaitAsync(PollInterval, ct).ConfigureAwait(false); }
+        catch (OperationCanceledException) { }
+    }
 
     // Composed state.
     private EffectChoice _globalEffect = EffectChoice.Rainbow;
@@ -169,7 +185,9 @@ internal sealed class KeyboardController : IAsyncDisposable
             IKeyboardDevice? device = null;
             try
             {
+                LastConnectionAttemptAt = DateTimeOffset.UtcNow;
                 device = await factory.FindAsync(ct).ConfigureAwait(false);
+                ConnectionError = null;
             }
             catch (OperationCanceledException)
             {
@@ -177,12 +195,14 @@ internal sealed class KeyboardController : IAsyncDisposable
             }
             catch (Exception ex)
             {
+                ConnectionError = ex;
                 _log.Log(LogLevel.Error, "Keyboard detection failed.", ex);
             }
 
             if (device is null)
             {
-                await DelaySafe(PollInterval, ct).ConfigureAwait(false); // sleep, then re-detect
+                StateChanged?.Invoke();
+                await WaitToReconnectAsync(ct).ConfigureAwait(false); // sleep, then re-detect
                 continue;
             }
 
@@ -193,6 +213,7 @@ internal sealed class KeyboardController : IAsyncDisposable
 
                 DeviceInfo info = await device.ReadInfoAsync(ct).ConfigureAwait(false);
                 Firmware = info.FirmwareVersion;
+                LastKnownFirmware = Firmware;
                 LayoutId = info.LayoutId;
 
                 _engine = new RenderEngine(device, new Compositor(_profile.LedCount), _log, _profile,
@@ -202,22 +223,24 @@ internal sealed class KeyboardController : IAsyncDisposable
                 await _hook.StartAsync(ct).ConfigureAwait(false);
 
                 _engineCts = new CancellationTokenSource();
+                _engine.FirstFrameSent += () => { _connected = true; ConnectionError = null; StateChanged?.Invoke(); };
                 _engineTask = Task.Run(() => _engine!.RunAsync(_engineCts.Token));
 
-                _connected = true;
-                _log.Log(LogLevel.Info, $"Connected. Firmware {Firmware}, layout {LayoutId}.");
+                _log.Log(LogLevel.Info, $"Keyboard identified. Firmware {Firmware}, layout {LayoutId}.");
                 Rebuild();
                 StateChanged?.Invoke();
 
                 // The engine task completes when the device is lost (write failed) or
                 // when we shut down — either way, fall through to tear down.
                 await _engineTask.ConfigureAwait(false);
+                ConnectionError = _engine.LastWriteError;
             }
             catch (OperationCanceledException)
             {
             }
             catch (Exception ex)
             {
+                ConnectionError = ex;
                 _log.Log(LogLevel.Error, "Keyboard connection failed.", ex);
             }
 
@@ -231,10 +254,10 @@ internal sealed class KeyboardController : IAsyncDisposable
             _connected = false;
             Firmware = "";
             LayoutId = -1;
-            _log.Log(LogLevel.Warning, "Keyboard disconnected — searching…");
+            _log.Log(LogLevel.Warning, "Keyboard connection ended; waiting to retry.");
             StateChanged?.Invoke();
 
-            await DelaySafe(PollInterval, ct).ConfigureAwait(false);
+            await WaitToReconnectAsync(ct).ConfigureAwait(false);
         }
 
         await TeardownConnectionAsync().ConfigureAwait(false);
@@ -253,6 +276,7 @@ internal sealed class KeyboardController : IAsyncDisposable
         }
         _engineCts?.Dispose();
         _engineCts = null;
+        _lastSuccessfulFrameAt = _engine?.LastFrameSentAt ?? _lastSuccessfulFrameAt;
         _engine = null;
 
         if (_hook is not null)
@@ -268,12 +292,6 @@ internal sealed class KeyboardController : IAsyncDisposable
             catch (Exception ex) { _log.Log(LogLevel.Warning, "Keyboard lighting restoration failed.", ex); }
             _device = null;
         }
-    }
-
-    private static async Task DelaySafe(TimeSpan delay, CancellationToken ct)
-    {
-        try { await Task.Delay(delay, ct).ConfigureAwait(false); }
-        catch (OperationCanceledException) { /* shutting down */ }
     }
 
     /// <summary>Set the base effect that covers every key.</summary>

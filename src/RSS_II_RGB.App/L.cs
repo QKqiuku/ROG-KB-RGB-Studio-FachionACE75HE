@@ -8,7 +8,7 @@ namespace RSS_II_RGB.App;
 /// ResourceManager, satellite assemblies, or reflection (AOT-safe). Brand names
 /// (e.g. "Strix Scope II RGB") are intentionally not translated.
 /// </summary>
-internal static class L
+internal static partial class L
 {
     /// <summary>Set once at startup (see <see cref="Program"/>).</summary>
     public static AppLanguage Language { get; set; } = AppLanguage.English;
@@ -251,7 +251,7 @@ internal static class L
     public static string StatusConnectedFormat =>
         S("Connected — {0}, firmware {1}", "已連線 — {0}，韌體 {1}", "已连接 · 固件 {1}");
     public static string StatusSearching =>
-        S("Searching for keyboard… (close Armoury Crate / OpenRGB)", "搜尋鍵盤中…（請關閉 Armoury Crate / OpenRGB）", "搜尋键盘中…（请關闭 Armoury Crate / OpenRGB）");
+        S("Waiting for wired keyboard…", "等待有線鍵盤連線…", "等待有线键盘连接…");
 
     // ----- Tray menu -----
     public static string TrayShow => S("Show", "顯示", "显示");
