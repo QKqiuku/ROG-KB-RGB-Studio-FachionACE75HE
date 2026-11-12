@@ -1,8 +1,8 @@
 # ROG KB RGB Studio
 
-<img src="docs/images/app-icon.png" width="88" alt="ROG KB RGB Studio icon">
+<img src="https://raw.githubusercontent.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/main/src/RSS_II_RGB.App/Assets/AppIcon.png" width="88" alt="ROG KB RGB Studio icon">
 
-[English](README.en.md) · [下载应用](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/releases) · [详细使用指南](docs/USER-GUIDE.md)
+[English](README.en.md) · [下载应用](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/releases)
 
 为 **ROG Falchion Ace 75 HE（魔导士 75 HE）** 制作的非官方键盘灯效工作台，支持 83 个按键、顶部 12 段灯条和 ROG 眼睛灯区。
 
@@ -92,7 +92,7 @@
 - **使用音乐效果**：选择音乐预设，指定系统声音或目标进程，再根据音乐调整灵敏度。进程音频采集需要 Windows build 20348+。
 - **退出软件**：点 × 或最小化会隐藏到托盘并继续播放；点击“退出并恢复”或托盘 Exit 才会停止并尝试恢复原灯效。
 
-升级或切换 Full / Lite 前先正常退出。设置和素材保存在 `%LOCALAPPDATA%\RSS_II_RGB`，保留该目录即可继续使用已有编排与动画。更多操作见[使用指南](docs/USER-GUIDE.md)。
+升级或切换 Full / Lite 前先正常退出。设置和素材保存在 `%LOCALAPPDATA%\RSS_II_RGB`，保留该目录即可继续使用已有编排与动画。
 
 ## 连接异常怎么办
 

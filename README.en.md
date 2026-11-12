@@ -1,8 +1,8 @@
 # ROG KB RGB Studio
 
-<img src="docs/images/app-icon.png" width="88" alt="ROG KB RGB Studio icon">
+<img src="https://raw.githubusercontent.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/main/src/RSS_II_RGB.App/Assets/AppIcon.png" width="88" alt="ROG KB RGB Studio icon">
 
-[简体中文](README.md) · [Download](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/releases) · [User guide](docs/USER-GUIDE.md)
+[简体中文](README.md) · [Download](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/releases)
 
 An unofficial lighting studio for the **ROG Falchion Ace 75 HE**, controlling its 83 keys, 12 top-strip segments and ROG eye lighting zone.
 
@@ -92,7 +92,7 @@ Choose a package from [Releases](https://github.com/QKqiuku/ROG-KB-RGB-Studio-Fa
 - **Music effects**: choose a music preset, select system audio or a target process, then adjust sensitivity for your music. Process capture requires Windows build 20348+.
 - **Exit**: closing or minimizing hides the app to the tray while playback continues. Use Exit and Restore or tray Exit to stop and attempt to restore the original lighting.
 
-Exit normally before upgrading or switching between Full and Lite. Settings and assets are stored under `%LOCALAPPDATA%\RSS_II_RGB`; preserve that directory to keep your compositions and animations. See the [user guide](docs/USER-GUIDE.md) for more.
+Exit normally before upgrading or switching between Full and Lite. Settings and assets are stored under `%LOCALAPPDATA%\RSS_II_RGB`; preserve that directory to keep your compositions and animations.
 
 ## Connection troubleshooting
 

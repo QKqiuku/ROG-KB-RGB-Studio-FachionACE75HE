@@ -40,9 +40,6 @@ foreach($taskProject in @('RSS_II_RGB.App','RSS_II_RGB.SensorsHost','RSS_II_RGB.
 Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination $taskOutput
 foreach($taskDocument in @('README.md','README.en.md')){Copy-Item -LiteralPath (Join-Path $taskRoot $taskDocument) -Destination $taskOutput}
 Copy-Item -LiteralPath (Join-Path $taskRoot 'NOTICE.md') -Destination $taskOutput
-$taskDocs=Join-Path $taskOutput 'docs';$null=New-Item -ItemType Directory -Path $taskDocs
-foreach($taskDocument in @('RELEASE-NOTES.md','DOWNLOADS.md','USER-GUIDE.md','GITHUB-PUBLISH.md','ARCHITECTURE.md','ATK-GALLERY.md','MUSIC-AUDIO.md','FALCHION75.md')){Copy-Item -LiteralPath (Join-Path $taskRoot "docs/$taskDocument") -Destination $taskDocs}
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/images') -Destination $taskDocs -Recurse
 Set-Content -LiteralPath (Join-Path $taskOutput 'Start-Studio.cmd') -Encoding ascii -Value '@echo off', 'start "" "%~dp0RSS_II_RGB.App.exe" --experimental-falchion75'
 # Copy before generating notices so Lite receives only its own dependency licences.
 $null=New-Item -ItemType Directory -Path $taskLiteOutput
@@ -104,7 +101,7 @@ $taskArchive=[IO.Compression.ZipFile]::Open($taskSourceZip,[IO.Compression.ZipAr
 try{
  foreach($taskSource in Get-ChildItem -LiteralPath $taskRoot -Recurse -File -Force | Where-Object {
   $taskParts=[IO.Path]::GetRelativePath($taskRoot,$_.FullName) -split '[/\\]'
-  !(@('bin','obj','dist','.git','.vs','.idea') | Where-Object {$_ -in $taskParts}) -and $_.Extension -notin @('.user','.suo','.log')
+  !(@('bin','obj','dist','.git','.vs','.idea','docs') | Where-Object {$_ -in $taskParts}) -and $_.Name -ne 'CLAUDE.md' -and $_.Extension -notin @('.user','.suo','.log')
  }){
   $taskRelative=[IO.Path]::GetRelativePath($taskRoot,$taskSource.FullName).Replace('\','/')
   $null=[IO.Compression.ZipFileExtensions]::CreateEntryFromFile($taskArchive,$taskSource.FullName,$taskRelative,[IO.Compression.CompressionLevel]::Optimal)
