@@ -39,6 +39,8 @@ Effects will continue to be refined based on their appearance on the physical ke
 
 This project currently targets only the **wired ROG Falchion Ace 75 HE with the ANSI 83-key layout**. Compatibility with other ROG models or keyboard brands is not guaranteed.
 
+If you have an unsupported ROG keyboard and would like to help add support, contact me on **QQ: 2033239928** and include the exact keyboard model.
+
 If your keyboard is not supported, consider exploring [Lumo](https://lumo.tozero.me/). It offers lighting effects, key-reactive effects and music synchronization, and its public previews inspired some effects in this project. Check its [device compatibility page](https://lumo.tozero.me/srgb.html) for your exact model, connection method and feature limitations before use. Lumo includes both free features and paid Pro features.
 
 ## Download and start
