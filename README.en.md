@@ -6,6 +6,14 @@
 
 An unofficial lighting studio for the **ROG Falchion Ace 75 HE**, controlling its 83 keys, 12 top-strip segments and ROG eye lighting zone.
 
+## Why this project exists
+
+For my needs, Armoury Crate feels too bulky, with extensive device-management and ecosystem features. Its lighting workflow emphasizes audio synchronization and multi-device effects, which offer limited value to someone without a full ROG setup who mainly wants to customize a single keyboard.
+
+For keyboard lighting specifically, the available presets and customization options did not meet my needs. The web-based driver is convenient, but its lighting selection is also limited. I wanted to combine effects freely, create key regions, control the strip and eye separately, and save my own compositions.
+
+That led me to build ROG KB RGB Studio on an existing open-source project, focusing on lighting creation for a single keyboard: more presets, finer controls, region and layer composition, key-reactive effects, music sync and keyframe animation playback. You do not need a room full of RGB devices to make more of your keyboard’s lighting.
+
 ## Features
 
 - **Built-in effects**: waves, fire, aurora, fireworks and more, with colors, speed, brightness, effect-specific settings and a reset-to-defaults button.
@@ -19,6 +27,18 @@ An unofficial lighting studio for the **ROG Falchion Ace 75 HE**, controlling it
 - **GIF animations**: Full imports, crops and converts GIFs; both versions play previously converted animations.
 - **Live previews**: the keyboard reflects the last successfully sent lighting frame, with an additional continuous canvas for music effects. Choose 15 / 30 / 45 / 60 FPS.
 - **Three UI languages**: Simplified Chinese, Traditional Chinese and English, selected from the system language.
+
+## Effect origins
+
+Most built-in presets draw inspiration from online searches, public lighting demonstrations and AI-assisted design, implementation and refinement. Some effects reference Lumo’s public previews and are reimplemented for the keyboard’s limited LED layout, so they may differ from their references.
+
+Effects will continue to be refined based on their appearance on the physical keyboard. Feedback and new ideas are welcome.
+
+## Supported keyboard and alternatives
+
+This project currently targets only the **wired ROG Falchion Ace 75 HE with the ANSI 83-key layout**. Compatibility with other ROG models or keyboard brands is not guaranteed.
+
+If your keyboard is not supported, consider exploring [Lumo](https://lumo.tozero.me/). It offers lighting effects, key-reactive effects and music synchronization, and its public previews inspired some effects in this project. Check its [device compatibility page](https://lumo.tozero.me/srgb.html) for your exact model, connection method and feature limitations before use. Lumo includes both free features and paid Pro features.
 
 ## Download and start
 
