@@ -2,52 +2,49 @@
 
 <img src="docs/images/app-icon.png" width="88" alt="ROG KB RGB Studio icon">
 
-[English](README.en.md) · [下载与版本选择](docs/DOWNLOADS.md) · [使用指南](docs/USER-GUIDE.md) · [发布到 GitHub](docs/GITHUB-PUBLISH.md)
+[English](README.en.md) · [下载应用](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/releases) · [详细使用指南](docs/USER-GUIDE.md)
 
-面向有线 **ROG Falchion Ace 75 HE，ANSI 83 键，VID:PID `0B05:1C7D`** 的非官方 Windows 灯效工作台。控制 83 键、顶部 12 段灯条及眼睛灯区。基于 [bbfox0703/RSS_II_RGB](https://github.com/bbfox0703/RSS_II_RGB) 扩展，沿用 GPL-3.0；与 ASUS、ROG、ATK 无隶属或背书关系。应用使用自有键帽标记和通用眼睛图形；设备名称仅用于说明兼容性，未宣称获得品牌授权。
+为 **ROG Falchion Ace 75 HE（魔导士 75 HE）** 制作的非官方键盘灯效工作台，支持 83 个按键、顶部 12 段灯条和 ROG 眼睛灯区。
+
+## 功能介绍
+
+- **丰富的预设灯效**：波浪、火焰、极光、烟花等效果，可调整颜色、速度、亮度及各效果的专属参数，也可一键恢复当前预设的默认设置。
+- **按键交互灯效**：按键涟漪、聚光灯、染色、闪电、烟花等，随真实按键触发，并可与基础灯效一起使用。
+- **音乐联动**：频谱柱、经典均衡器、声浪、太阳律动等效果；可选择系统声音或指定应用进程，调节灵敏度、回落和配色。
+- **自由编排**：点选或框选按键建立分区，为不同区域设置独立颜色、灯效和参数；在基础灯效上组合自定义层。
+- **灯条与眼睛控制**：跟随下方按键、按独立位置计算效果，或在自定义模式中单独编排；灯条支持逐段选取及音乐律动。
+- **总体效果**：在自定义模式中统一调节整套编排的透明度，并叠加常亮、呼吸或节拍闪光。
+- **保存我的灯效**：为完整编排命名并保存，在左侧像预设一样加载，支持再次编辑、保存及删除。
+- **ATK 灯效广场**：浏览、预览并导入与当前键盘配列匹配的逐帧动画，支持最新、最热排序。
+- **GIF 动画**：完整版可导入、裁剪和转换 GIF；已转换的动画可在两版中播放。
+- **实时预览**：键盘预览跟随最后成功发送的灯光帧，音乐效果另有连续画布预览。帧率可选 15 / 30 / 45 / 60 FPS。
+- **三种界面语言**：简体中文、繁体中文、英文，跟随系统语言。
 
 ## 下载与启动
 
-在你正在浏览的仓库打开 **Releases**，选择 Full 或 Lite：两者均为 Windows 10/11 x64 自包含包，无需安装 .NET。Full 包含 GIF 转换组件；Lite 不包含 GIF 转换组件，禁用新 GIF 导入，但仍播放已有 `.kbanim` 和 ATK 动画。其它灯效、进程音频、按键、灯条及自定义编排功能相同。文件大小以实际 Release 附件为准。
+当前支持 **Windows 10/11 x64 + 有线 Falchion Ace 75 HE ANSI 83 键**。暂不提供 Windows ARM64、32 位 Windows、macOS 或 Linux 版本。无需另外安装 .NET。
 
-完整解压后，退出其它控制键盘灯光的软件，运行 `Start-Studio.cmd` 或 `RSS_II_RGB.App.exe`。程序默认选择 75HE，启动需要你手动确认管理员 UAC 提示。点 × 或最小化会隐藏至托盘；真正退出请使用“退出并恢复”或托盘 Exit。当前没有 75HE 开机自启动。升级前先正常退出旧版。
+前往 [Releases](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/releases) 选择版本：
 
-## 平台支持
-
-| 平台 / 架构 | 当前状态 |
+| 版本 | 如何选择 |
 | --- | --- |
-| Windows 10/11 x64 | 当前提供 Full / Lite 预览包；验证范围见下方说明 |
-| Windows ARM64 | 暂未提供原生包，未验证 x64 模拟运行 |
-| Windows x86（32 位） | 暂未适配或提供包；当前工程及原生依赖按 x64 构建 |
-| macOS / Linux | 暂不支持，未提供安装包 |
+| **Full 完整版** | 需要导入和转换新 GIF 时选择 |
+| **Lite 精简版** | 不含 GIF 转换组件，体积更小；其它灯效、ATK 和已有动画播放功能保留 |
 
-Avalonia 界面可跨平台，但本项目的 HID 设备通信、按键监听、音频采集和管理员启动目前使用 Windows 实现。其它平台需要完成平台适配、原生依赖检查和实机测试，不能只更换打包目标。未承诺其它平台的发布时间。.NET 10 本身支持 Windows x86；本项目没有 x86 包不代表运行时不支持该架构（[官方平台说明](https://learn.microsoft.com/en-us/dotnet/core/install/windows#supported-versions)）。
+1. 完整解压下载的压缩包，不要单独移动 EXE。
+2. 连接键盘，并退出其它正在控制键盘灯光的软件。
+3. 双击 `RSS_II_RGB.App.exe` 或 `Start-Studio.cmd`，手动确认管理员权限弹窗。
+4. 等待连接成功，点击预设即可使用。
 
-## 功能与边界
+## 使用方法
 
-- 常规、按键交互、音乐联动、GIF/ATK 动画；区域独立参数、灯条/眼睛编排、命名保存整套自定义灯效。
-- 预设模式播放所选预设；进入自定义时以当前效果开始编辑。15/30/45/60 FPS 可选；实际发送速度受设备与负载影响。
-- ATK 广场只显示当前已确认配列的纯逐帧作品，保留作者信息；预览不会改动实体灯光。远端接口变化或分页中断可能影响结果。
-- 系统音频及目标进程音频在本机分析，不保存录音。指定进程采集需要 Windows build 20348+；受保护音频可能无法采集。
-- 简体中文、繁体中文、英文随系统语言选择。预览显示最后成功发送的数据，并非硬件回读。
+- **使用预设**：选择常规、按键、音乐或动画效果，在右侧调整参数。
+- **自定义编排**：进入“自定义”，选择基础灯效（可选“关闭”），点选或框选按键建立区域，通过“区域灯效调整”设置该区域的效果与配色。
+- **编辑装饰灯**：将灯条或眼睛切换为“自定义”，选中对应灯区进行编辑；灯条还可以逐段选择。
+- **保存作品**：在“我的灯效”输入名称并保存，之后可随时加载、编辑和再次保存。
+- **使用音乐效果**：选择音乐预设，指定系统声音或目标进程，再根据音乐调整灵敏度。进程音频采集需要 Windows build 20348+。
+- **退出软件**：点 × 或最小化会隐藏到托盘并继续播放；点击“退出并恢复”或托盘 Exit 才会停止并尝试恢复原灯效。
 
-配置位于 `%LOCALAPPDATA%\RSS_II_RGB\settings-falchion75.json`，素材位于同目录 `anims`、`user-presets`，日志位于 `Logs`。覆盖软件目录不清除这些数据。按键监听只用于灯效位置与触发，不保存输入文字；其它键盘也可能触发对应位置。
+升级或切换 Full / Lite 前先正常退出。设置和素材保存在 `%LOCALAPPDATA%\RSS_II_RGB`，保留该目录即可继续使用已有编排与动画。更多操作见[使用指南](docs/USER-GUIDE.md)。
 
-此版本是**未签名的公开预览**。已有用户测试仅覆盖其本机键盘、固件和环境；不代表所有固件、游戏或电脑都验证过。管理员启动曾在用户本机恢复《无畏契约》按键特效，兼容性不作普遍保证。断开设备、强制结束、断电或系统强制关机可能中断恢复；正常退出会尝试恢复原灯效。程序不修改磁轴触发、回报率或固件。每个新发行包仍需实体键盘及无 .NET 环境验证。
-
-## 构建与分发
-
-需要 .NET 10 SDK，打包需要 PowerShell 7.2+：
-
-```powershell
-dotnet restore ROG-KB-RGB-Studio.slnx -p:PublishAot=false
-dotnet build ROG-KB-RGB-Studio.slnx -t:Rebuild -c Release -p:PublishAot=false --no-restore
-dotnet test ROG-KB-RGB-Studio.slnx -c Release --no-build
-pwsh -File tools/Publish-Studio.ps1
-```
-
-脚本生成 Full、Lite、对应源码和 SHA-256 校验文件；拒绝覆盖已有输出，不会自动上传。实际发行采用自包含、未裁剪构建；旧 Native AOT 脚本仅作参考。
-
-分发时保留 [LICENSE](LICENSE)、[NOTICE.md](NOTICE.md)、第三方许可资料，同时提供对应源码。仅沿用原仓库的基础工程、程序集和共享命名空间保留 `RSS_II_RGB`；新解决方案、应用测试和发布产物使用项目新名称。用户数据沿用旧目录以兼容已有配置。GitHub 自动源码只包含标签所指提交：新文件和未提交修改必须先完整提交。[发布指南](docs/GITHUB-PUBLISH.md) 提供新建独立仓库、提交、上传及 Release 步骤。
-
-详细资料：[架构](docs/ARCHITECTURE.md)、[ATK](docs/ATK-GALLERY.md)、[音乐](docs/MUSIC-AUDIO.md)、[75HE 协议](docs/FALCHION75.md)、[更新记录](docs/RELEASE-NOTES.md)。
+基于 [bbfox0703/RSS_II_RGB](https://github.com/bbfox0703/RSS_II_RGB) 开发，沿用 [GPL-3.0](LICENSE)。非 ASUS、ROG 或 ATK 官方软件。
