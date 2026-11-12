@@ -1,0 +1,338 @@
+{
+  "source": "https://gearlink.asus.com/view/7293/chunk-1.00.24-7293-1787215788-772aaa-TZdLhL9S.js",
+  "model": "rog-m705",
+  "keys": [
+    {
+      "id": 2,
+      "name": "ESCAPE"
+    },
+    {
+      "id": 10,
+      "name": "F1"
+    },
+    {
+      "id": 18,
+      "name": "F2"
+    },
+    {
+      "id": 26,
+      "name": "F3"
+    },
+    {
+      "id": 34,
+      "name": "F4"
+    },
+    {
+      "id": 42,
+      "name": "F5"
+    },
+    {
+      "id": 50,
+      "name": "F6"
+    },
+    {
+      "id": 58,
+      "name": "F7"
+    },
+    {
+      "id": 66,
+      "name": "F8"
+    },
+    {
+      "id": 74,
+      "name": "F9"
+    },
+    {
+      "id": 82,
+      "name": "F10"
+    },
+    {
+      "id": 90,
+      "name": "F11"
+    },
+    {
+      "id": 98,
+      "name": "F12"
+    },
+    {
+      "id": 106,
+      "name": "HOME"
+    },
+    {
+      "id": 114,
+      "name": "END"
+    },
+    {
+      "id": 3,
+      "name": "BACK_TICK"
+    },
+    {
+      "id": 11,
+      "name": "1"
+    },
+    {
+      "id": 19,
+      "name": "2"
+    },
+    {
+      "id": 27,
+      "name": "3"
+    },
+    {
+      "id": 35,
+      "name": "4"
+    },
+    {
+      "id": 43,
+      "name": "5"
+    },
+    {
+      "id": 51,
+      "name": "6"
+    },
+    {
+      "id": 59,
+      "name": "7"
+    },
+    {
+      "id": 67,
+      "name": "8"
+    },
+    {
+      "id": 75,
+      "name": "9"
+    },
+    {
+      "id": 83,
+      "name": "0"
+    },
+    {
+      "id": 91,
+      "name": "MINUS"
+    },
+    {
+      "id": 99,
+      "name": "EQUALS"
+    },
+    {
+      "id": 107,
+      "name": "BACKSPACE"
+    },
+    {
+      "id": 115,
+      "name": "INSERT"
+    },
+    {
+      "id": 4,
+      "name": "TAB"
+    },
+    {
+      "id": 12,
+      "name": "Q"
+    },
+    {
+      "id": 20,
+      "name": "W"
+    },
+    {
+      "id": 28,
+      "name": "E"
+    },
+    {
+      "id": 36,
+      "name": "R"
+    },
+    {
+      "id": 44,
+      "name": "T"
+    },
+    {
+      "id": 52,
+      "name": "Y"
+    },
+    {
+      "id": 60,
+      "name": "U"
+    },
+    {
+      "id": 68,
+      "name": "I"
+    },
+    {
+      "id": 76,
+      "name": "O"
+    },
+    {
+      "id": 84,
+      "name": "P"
+    },
+    {
+      "id": 92,
+      "name": "LEFT_BRACKET"
+    },
+    {
+      "id": 100,
+      "name": "RIGHT_BRACKET"
+    },
+    {
+      "id": 108,
+      "name": "ANSI_BACK_SLASH"
+    },
+    {
+      "id": 116,
+      "name": "DELETE"
+    },
+    {
+      "id": 5,
+      "name": "CAPS_LOCK"
+    },
+    {
+      "id": 13,
+      "name": "A"
+    },
+    {
+      "id": 21,
+      "name": "S"
+    },
+    {
+      "id": 29,
+      "name": "D"
+    },
+    {
+      "id": 37,
+      "name": "F"
+    },
+    {
+      "id": 45,
+      "name": "G"
+    },
+    {
+      "id": 53,
+      "name": "H"
+    },
+    {
+      "id": 61,
+      "name": "J"
+    },
+    {
+      "id": 69,
+      "name": "K"
+    },
+    {
+      "id": 77,
+      "name": "L"
+    },
+    {
+      "id": 85,
+      "name": "SEMICOLON"
+    },
+    {
+      "id": 93,
+      "name": "QUOTE"
+    },
+    {
+      "id": 101,
+      "name": "ANSI_ENTER"
+    },
+    {
+      "id": 109,
+      "name": "PAGE_UP"
+    },
+    {
+      "id": 6,
+      "name": "LEFT_SHIFT"
+    },
+    {
+      "id": 14,
+      "name": "Z"
+    },
+    {
+      "id": 22,
+      "name": "X"
+    },
+    {
+      "id": 30,
+      "name": "C"
+    },
+    {
+      "id": 38,
+      "name": "V"
+    },
+    {
+      "id": 46,
+      "name": "B"
+    },
+    {
+      "id": 54,
+      "name": "N"
+    },
+    {
+      "id": 62,
+      "name": "M"
+    },
+    {
+      "id": 70,
+      "name": "COMMA"
+    },
+    {
+      "id": 78,
+      "name": "PERIOD"
+    },
+    {
+      "id": 86,
+      "name": "FORWARD_SLASH"
+    },
+    {
+      "id": 94,
+      "name": "RIGHT_SHIFT"
+    },
+    {
+      "id": 102,
+      "name": "UP_ARROW"
+    },
+    {
+      "id": 110,
+      "name": "PAGE_DOWN"
+    },
+    {
+      "id": 7,
+      "name": "LEFT_CONTROL"
+    },
+    {
+      "id": 15,
+      "name": "LEFT_WINDOWS"
+    },
+    {
+      "id": 23,
+      "name": "LEFT_ALT"
+    },
+    {
+      "id": 31,
+      "name": "SPACE"
+    },
+    {
+      "id": 79,
+      "name": "RIGHT_ALT"
+    },
+    {
+      "id": 87,
+      "name": "RIGHT_FUNCTION"
+    },
+    {
+      "id": 95,
+      "name": "RIGHT_CONTROL"
+    },
+    {
+      "id": 103,
+      "name": "LEFT_ARROW"
+    },
+    {
+      "id": 111,
+      "name": "DOWN_ARROW"
+    },
+    {
+      "id": 119,
+      "name": "RIGHT_ARROW"
+    }
+  ]
+}

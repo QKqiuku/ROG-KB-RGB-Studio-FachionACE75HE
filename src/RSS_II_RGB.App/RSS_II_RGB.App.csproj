@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Avalonia host, published as Native AOT trimmed (CLAUDE.md rule 1). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <Product>ROG KB RGB Studio</Product>
+    <Title>ROG KB RGB Studio</Title>
+    <Description>Unofficial ROG keyboard lighting studio</Description>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <PublishAot>true</PublishAot>
+    <TrimMode>full</TrimMode>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Windows .exe / taskbar icon. -->
+    <ApplicationIcon>Assets\Mainicon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- App assets (window icon etc.) embedded as Avalonia resources. -->
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.17" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.17">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RSS_II_RGB.Core\RSS_II_RGB.Core.csproj" />
+    <ProjectReference Include="..\RSS_II_RGB.Windows\RSS_II_RGB.Windows.csproj" />
+  </ItemGroup>
+
+  <!--
+    The SensorsHost is a separate non-AOT process (not referenced — it must NOT be
+    linked into the AOT app). Build it and copy its FULL output (incl. the managed
+    .dll) into a sensorshost\ subfolder next to the app, where SensorService finds it.
+  -->
+  <Target Name="BuildAndCopySensorsHost" AfterTargets="Build;Publish" Condition="'$(SkipHelperCopy)' != 'true'">
+    <MSBuild Projects="..\RSS_II_RGB.SensorsHost\RSS_II_RGB.SensorsHost.csproj"
+             Targets="Build" Properties="Configuration=$(Configuration)"
+             RemoveProperties="RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishAot;PublishTrimmed;PublishSingleFile" />
+    <ItemGroup>
+      <_SensorsHostFiles Include="..\RSS_II_RGB.SensorsHost\bin\$(Configuration)\net10.0-windows\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SensorsHostFiles)"
+          DestinationFolder="$(OutDir)sensorshost\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="'$(PublishDir)' != ''"
+          SourceFiles="@(_SensorsHostFiles)"
+          DestinationFolder="$(PublishDir)sensorshost\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!--
+    The GifBakeHost is a second non-AOT process (also not referenced — Magick.NET must
+    NOT be linked into the AOT app). Build it and copy its FULL output (incl. the
+    native image libs) into a gifbakehost\ subfolder next to the app, where
+    GifImportService finds it.
+  -->
+  <Target Name="BuildAndCopyGifBakeHost" AfterTargets="Build;Publish" Condition="'$(SkipHelperCopy)' != 'true'">
+    <MSBuild Projects="..\RSS_II_RGB.GifBakeHost\RSS_II_RGB.GifBakeHost.csproj"
+             Targets="Build" Properties="Configuration=$(Configuration)"
+             RemoveProperties="RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishAot;PublishTrimmed;PublishSingleFile" />
+    <ItemGroup>
+      <_GifBakeHostFiles Include="..\RSS_II_RGB.GifBakeHost\bin\$(Configuration)\net10.0-windows\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_GifBakeHostFiles)"
+          DestinationFolder="$(OutDir)gifbakehost\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="'$(PublishDir)' != ''"
+          SourceFiles="@(_GifBakeHostFiles)"
+          DestinationFolder="$(PublishDir)gifbakehost\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

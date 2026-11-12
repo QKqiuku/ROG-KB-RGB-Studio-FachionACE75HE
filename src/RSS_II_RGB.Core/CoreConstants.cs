@@ -1,0 +1,53 @@
+namespace RSS_II_RGB.Core;
+
+/// <summary>
+/// Centralised magic values for the Core project (CLAUDE.md rule 8).
+/// Protocol bytes, frame geometry, and timing. Nothing platform-specific lives here.
+/// </summary>
+public static class CoreConstants
+{
+    // ----- Frame geometry (Strix Scope II, ANSI) -----
+    public const int LedCount = 107;
+    public const int MatrixRows = 6;
+    public const int MatrixCols = 24;
+
+    // ----- Direct HID protocol -----
+    // Ported from vendor/openrgb AsusAuraTUFKeyboardController.cpp (UpdateLeds).
+    public const int ReportLength = 65;     // 1 report-id byte + 64 payload
+    public const int LedsPerPacket = 15;    // 5-byte header, then 4 bytes/LED
+    public const int PacketsPerFrame = 8;   // ceil(107 / 15)
+    public const byte DirectHeaderHi = 0xC0;
+    public const byte DirectHeaderLo = 0x81;
+
+    // Falchion 75 HE: observed replies and software-mode commands (Gear Link).
+    public const byte Falchion75DirectAck = 0x82;
+    public const byte Falchion75QuerySoftwareMode = 0x27;
+    public const byte Falchion75SetSoftwareMode = 0x74;
+    public const int Falchion75ResponseTimeoutMs = 1800;
+
+    // Other commands (vendor/openrgb AsusAuraTUFKeyboardController.cpp):
+    public const byte CmdQuery = 0x12;  // 12 00 -> firmware version, 12 12 -> layout id
+    public const byte QueryVersion = 0x00;
+    public const byte QueryLayout = 0x12;
+    public const byte CmdEffect = 0x51;  // 51 2C ... -> hardware effect
+    public const byte EffectArg = 0x2C;
+    public const byte EffectColorModeSpecific = 0x10; // breathing with a fixed colour
+    public const byte EffectPerLedFlag = 0x02;
+    public const byte CmdSave = 0x50;    // 50 55 -> persist current mode to flash
+    public const byte SaveArg = 0x55;
+
+    // ----- Audio analysis (shared by SensorsHost AudioProvider and the audio layers) -----
+    public const int AudioBandCount = 24;    // logarithmic FFT bands (one per keyboard column)
+    public const double AudioMinHz = 30;     // low edge — sub-bass below this is ignored
+    public const double AudioMaxHz = 16000;  // high edge — treble cap
+    // Three-region split for the "bars" audio layout.
+    public const double AudioBassMaxHz = 250;  // bass:   AudioMinHz..250 Hz
+    public const double AudioMidMaxHz = 2000;  // mid:    250..2000 Hz   (treble: 2000..AudioMaxHz)
+
+    // ----- Render loop -----
+    public const int DefaultTargetFps = 40; // device sustains ~42 FPS
+
+    // ----- IPC -----
+    // Named pipe between the main app and the non-AOT SensorsHost helper.
+    public const string SensorPipeName = "RSS_II_RGB.sensors";
+}

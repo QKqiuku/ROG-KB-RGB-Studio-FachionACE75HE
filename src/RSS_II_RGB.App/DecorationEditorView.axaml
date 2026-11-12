@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RSS_II_RGB.App" x:Class="RSS_II_RGB.App.DecorationEditorView" x:DataType="vm:DecorationEditorViewModel">
+    <StackPanel Spacing="10">
+        <Button Classes="quiet" Content="{x:Static vm:L.ResetCurrentEffect}" Command="{Binding ResetCommand}" HorizontalAlignment="Right" Focusable="False"/>
+        <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}" HorizontalAlignment="Stretch" Focusable="False">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:DecorationChoice"><TextBlock Text="{Binding Label}"/></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="{x:Static vm:L.RainbowColorsLabel}" IsChecked="{Binding MusicRainbow}" IsVisible="{Binding IsMusic}"/>
+        <TextBlock Text="{x:Static vm:L.DecorationSegmentedHint}" IsVisible="{Binding IsSegmented}" TextWrapping="Wrap" Classes="muted"/>
+        <ColorPicker Color="{Binding Color}" IsVisible="{Binding UsesColor}" IsAlphaEnabled="False"/>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
+            <StackPanel IsVisible="{Binding HasSpeed}"><TextBlock Text="{x:Static vm:L.SpeedLabel}"/><TextBlock Text="{Binding Speed, StringFormat='{}{0:0.0}×'}"/><Slider Minimum="0.1" Maximum="5" Value="{Binding Speed}"/></StackPanel>
+            <StackPanel Grid.Column="1"><TextBlock Text="{x:Static vm:L.KeyBrightnessLabel}"/><TextBlock Text="{Binding Brightness, StringFormat='{}{0:0}%'}"/><Slider Minimum="0" Maximum="100" Value="{Binding Brightness}"/></StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

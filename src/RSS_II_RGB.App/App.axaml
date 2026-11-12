@@ -1,0 +1,15 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="RSS_II_RGB.App.App"
+             RequestedThemeVariant="Dark">
+    <Application.Styles>
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="#E6002D"/>
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <!-- ColorPicker controls ship their own theme; FluentTheme doesn't include it. -->
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml"/>
+        <StyleInclude Source="avares://RSS_II_RGB.App/WorkbenchStyles.axaml"/>
+    </Application.Styles>
+</Application>

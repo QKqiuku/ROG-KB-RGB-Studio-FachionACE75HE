@@ -1,0 +1,568 @@
+using RSS_II_RGB.Core.Animation;
+using RSS_II_RGB.Core;
+using RSS_II_RGB.Core.Device;
+using RSS_II_RGB.Core.Effects;
+using RSS_II_RGB.Core.Effects.Layers;
+using RSS_II_RGB.Core.Engine;
+using RSS_II_RGB.Core.Input;
+using RSS_II_RGB.Core.Layout;
+using RSS_II_RGB.Core.Logging;
+using RSS_II_RGB.Core.Rendering;
+using RSS_II_RGB.Core.Sensors;
+using RSS_II_RGB.Windows;
+
+namespace RSS_II_RGB.App;
+
+/// <summary>
+/// Owns the device, render engine, and keyboard hook. Composes the active layer
+/// stack from a global effect plus zero or more per-zone overrides and streams it
+/// to the engine.
+/// </summary>
+internal sealed class KeyboardController : IAsyncDisposable
+{
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
+
+    private readonly ILogSink _log;
+    private readonly SensorState _sensors;
+    private readonly Win32ScreenColorSource _screenColors = new();
+    private ReactivePatternLayer? _keyLayer;
+    private ReactivePatternLayer? _spatialKeyLayer;
+    private (EffectChoice Effect, Rgb Color, PatternOptions Options, double Brightness)? _spatialKeyLayerSettings;
+    public DecorationMode LightBarMode { get; set; }
+    public DecorationMode EyeMode { get; set; }
+    public DecorationOptions BarEffect {get;set;}=new();
+    public DecorationOptions EyeEffect {get;set;}=new();
+    public OutputEnvelopeOptions OverallEffect {get;set;}=new();
+    private OutputEnvelope? _outputEnvelope;
+    private OutputEnvelopeOptions? _outputEnvelopeOptions;
+    internal OutputEnvelope? BuildOutputEnvelope()
+    {
+        if(!EnableCustomLayers)return null;
+        if(_outputEnvelope is null || _outputEnvelopeOptions!=OverallEffect)
+        { _outputEnvelopeOptions=OverallEffect;_outputEnvelope=new OutputEnvelope(_sensors,OverallEffect); }
+        return _outputEnvelope;
+    }
+    private (EffectChoice Effect, Rgb Color, PatternOptions Options, double Brightness)? _keyLayerSettings;
+    private IKeyboardDevice? _device;
+    private Win32KeyboardHook? _hook;
+    private volatile RenderEngine? _engine;
+    private CancellationTokenSource? _engineCts;
+    private Task? _engineTask;
+
+    // The detect/reconnect lifecycle loop.
+    private CancellationTokenSource? _lifecycleCts;
+    private Task? _lifecycleTask;
+    private volatile bool _connected;
+
+    // Composed state.
+    private EffectChoice _globalEffect = EffectChoice.Rainbow;
+    private Rgb _globalColor = new(0x00, 0xFF, 0x66);
+    private double _brightness = 1.0;
+    private IReadOnlyList<Zone> _zones = Array.Empty<Zone>();
+    private KeyboardProfile _profile = Program.EnableFalchion75 ? Falchion75Layout.Profile : ScopeIILayout.Profile;
+    private KbAnim? _gifAnim; // the imported GIF animation played by EffectChoice.Gif
+    private AtkScene? _atkScene;
+    private readonly Dictionary<string,(MusicKind Kind,Rgb Color,PatternOptions Options,MusicLayer Layer)> _musicLayers=new();
+    internal RSS_II_RGB.Core.Audio.AudioFrame AudioSnapshot => _sensors.Audio;
+    internal TimeSpan? MusicCanvasTime=>_engine is {FramesRendered:>0} engine?engine.LastFrameElapsed:null;
+    internal bool NeedsAudio => PresetCatalog.MusicFor(_globalEffect) is not null || (_globalEffect==EffectChoice.Atk && _atkScene?.UsesAudio==true)
+        || EnableCustomLayers && (EnableAudio || _zones.Any(z=>(z.Effect==EffectChoice.Audio || PresetCatalog.MusicFor(z.Effect) is not null) && (z.KeyIndices.Any(i=>i>=0 && i<_profile.LedCount)
+                || LightBarMode==DecorationMode.Custom && BarEffect.Effect==DecorationEffect.Segmented && z.KeyIndices.Any(i=>i>=83 && i<95)))
+            || OverallEffect.Mode==OutputEnvelopeMode.BeatFlash
+            || LightBarMode==DecorationMode.Custom && BarEffect.Effect==DecorationEffect.Music
+           );
+    private int _targetFps = Program.EnableFalchion75 ? AppConstants.Falchion75TargetFps : CoreConstants.DefaultTargetFps;
+
+    public KeyboardController(ILogSink log, SensorState sensors)
+    {
+        _log = log;
+        _sensors = sensors;
+    }
+
+    public bool IsRunning { get; private set; }
+    public string Firmware { get; private set; } = "";
+    public int LayoutId { get; private set; } = -1;
+    public IReadOnlyList<Zone> Zones => _zones;
+
+    /// <summary>True while a keyboard is open and being driven.</summary>
+    public bool IsConnected => _connected;
+    public int TargetFps => Volatile.Read(ref _targetFps);
+
+    public void SetTargetFps(int targetFps)
+    {
+        Volatile.Write(ref _targetFps, AppConstants.NormalizeTargetFps(targetFps));
+        _engine?.SetTargetFps(TargetFps);
+    }
+
+    /// <summary>Raised (on a background thread) whenever the connection state changes.</summary>
+    public event Action? StateChanged;
+
+    /// <summary>The connected keyboard's layout profile (geometry + key map).</summary>
+    public KeyboardProfile Profile => _profile;
+
+    public ReadOnlyMemory<Rgb> LastSentFrame
+    {
+        get
+        {
+            RenderEngine? engine = _engine;
+            return engine is not null && _engineTask is { IsCompleted: false }
+                ? engine.LastSentLightingFrame : ReadOnlyMemory<Rgb>.Empty;
+        }
+    }
+
+    /// <summary>Brightness multiplier for the audio visualiser (set before SetGlobalEffect).</summary>
+    public double AudioSensitivity { get; set; } = 0.9;
+
+    // Global Audio overlay layout (spectrum vs three-region bars) and the per-region
+    // bars multipliers (treble needs the most boost, bass the least).
+    public AudioLayoutChoice AudioLayout { get; set; } = AudioLayoutChoice.Spectrum;
+    public double AudioBarsBassMultiplier { get; set; } = 0.9;
+    public double AudioBarsMidMultiplier { get; set; } = 1.0;
+    public double AudioBarsTrebleMultiplier { get; set; } = 2.0;
+
+    // Independent global overlays, toggled from the main UI (set before SetGlobalEffect/SetZones).
+    // Reactive is the higher-priority of the two: it sits above the zones, audio below them.
+    public bool EnableReactive { get; set; }
+    public EffectChoice ReactiveEffect { get; set; } = EffectChoice.Reactive;
+    public PatternOptions ReactiveOptions { get; set; } = new();
+    public Rgb ReactiveColor { get; set; } = new(0,180,255);
+    public double ReactiveBrightness { get; set; } = 1;
+    public bool EnableAudio { get; set; }
+
+    // Starlight overlay: twinkling stars composited just above the base effect (and the
+    // base brightness), but below every other overlay — so a dimmed base stays visible
+    // through the gaps between stars.
+    public bool EnableStarlight { get; set; }
+    public bool EnableCustomLayers { get; set; } = true;
+    public PatternOptions BaseOptions { get; set; } = new();
+    public long FramesRendered => _engine?.FramesRendered ?? 0;
+
+    // System-metric overlay configuration (set before SetGlobalEffect/SetZones).
+    public bool ShowMetrics { get; set; }
+    public MetricLayoutChoice MetricLayout { get; set; } = MetricLayoutChoice.FunctionRow;
+    public double[] PercentThresholds { get; set; } = { 30, 60, 90 };
+    public double[] TempThresholds { get; set; } = { 55, 65, 75 };
+
+    /// <summary>
+    /// Begin the connection lifecycle: poll for the keyboard, drive it while present,
+    /// and automatically reconnect after an unplug. Non-blocking; subscribe to
+    /// <see cref="StateChanged"/> for connect/disconnect notifications.
+    /// </summary>
+    public void Start()
+    {
+        if (_lifecycleTask is not null)
+        {
+            return;
+        }
+        IsRunning = true;
+        _lifecycleCts = new CancellationTokenSource();
+        _lifecycleTask = Task.Run(() => RunLifecycleAsync(_lifecycleCts.Token));
+    }
+
+    // Detect → drive → (on loss) tear down → wait → retry, until disposed.
+    private async Task RunLifecycleAsync(CancellationToken ct)
+    {
+        var factory = new Win32KeyboardDeviceFactory(Program.EnableFalchion75);
+
+        while (!ct.IsCancellationRequested)
+        {
+            IKeyboardDevice? device = null;
+            try
+            {
+                device = await factory.FindAsync(ct).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _log.Log(LogLevel.Error, "Keyboard detection failed.", ex);
+            }
+
+            if (device is null)
+            {
+                await DelaySafe(PollInterval, ct).ConfigureAwait(false); // sleep, then re-detect
+                continue;
+            }
+
+            try
+            {
+                _device = device;
+                _profile = device.Profile;
+
+                DeviceInfo info = await device.ReadInfoAsync(ct).ConfigureAwait(false);
+                Firmware = info.FirmwareVersion;
+                LayoutId = info.LayoutId;
+
+                _engine = new RenderEngine(device, new Compositor(_profile.LedCount), _log, _profile,
+                    TargetFps, new Win32FrameTiming());
+                _hook = new Win32KeyboardHook(_profile);
+                _hook.KeyChanged += OnKey;
+                await _hook.StartAsync(ct).ConfigureAwait(false);
+
+                _engineCts = new CancellationTokenSource();
+                _engineTask = Task.Run(() => _engine!.RunAsync(_engineCts.Token));
+
+                _connected = true;
+                _log.Log(LogLevel.Info, $"Connected. Firmware {Firmware}, layout {LayoutId}.");
+                Rebuild();
+                StateChanged?.Invoke();
+
+                // The engine task completes when the device is lost (write failed) or
+                // when we shut down — either way, fall through to tear down.
+                await _engineTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                _log.Log(LogLevel.Error, "Keyboard connection failed.", ex);
+            }
+
+            await TeardownConnectionAsync().ConfigureAwait(false);
+
+            if (ct.IsCancellationRequested)
+            {
+                break;
+            }
+
+            _connected = false;
+            Firmware = "";
+            LayoutId = -1;
+            _log.Log(LogLevel.Warning, "Keyboard disconnected — searching…");
+            StateChanged?.Invoke();
+
+            await DelaySafe(PollInterval, ct).ConfigureAwait(false);
+        }
+
+        await TeardownConnectionAsync().ConfigureAwait(false);
+        _connected = false;
+    }
+
+    // Stop and release the current engine/hook/device (safe to call repeatedly).
+    private async Task TeardownConnectionAsync()
+    {
+        _screenColors.SetActive(false);
+        _engineCts?.Cancel();
+        if (_engineTask is not null)
+        {
+            try { await _engineTask.ConfigureAwait(false); } catch { /* stopping */ }
+            _engineTask = null;
+        }
+        _engineCts?.Dispose();
+        _engineCts = null;
+        _engine = null;
+
+        if (_hook is not null)
+        {
+            _hook.KeyChanged -= OnKey;
+            try { await _hook.StopAsync().ConfigureAwait(false); } catch { /* stopping */ }
+            _hook = null;
+        }
+
+        if (_device is not null)
+        {
+            try { await _device.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception ex) { _log.Log(LogLevel.Warning, "Keyboard lighting restoration failed.", ex); }
+            _device = null;
+        }
+    }
+
+    private static async Task DelaySafe(TimeSpan delay, CancellationToken ct)
+    {
+        try { await Task.Delay(delay, ct).ConfigureAwait(false); }
+        catch (OperationCanceledException) { /* shutting down */ }
+    }
+
+    /// <summary>Set the base effect that covers every key.</summary>
+    public void SetGlobalEffect(EffectChoice effect, Rgb color, double brightness)
+    {
+        _globalEffect = PresetCatalog.Available(effect);
+        _globalColor = color;
+        _brightness = brightness;
+        Rebuild();
+    }
+
+    /// <summary>Replace the per-zone overrides layered on top of the global effect.</summary>
+    public void SetZones(IReadOnlyList<Zone> zones,bool rebuild=true)
+    {
+        _zones = zones;
+        if(rebuild)Rebuild();
+    }
+
+    /// <summary>Set (or clear) the baked GIF animation played by <see cref="EffectChoice.Gif"/>.</summary>
+    public void SetGifAnimation(KbAnim? anim,bool rebuild=true)
+    {
+        _gifAnim = anim;
+        if(rebuild)Rebuild();
+    }
+
+    public void SetAtkAnimation(AtkScene? scene,bool rebuild=true)
+    {
+        _atkScene = scene;
+        if(rebuild)Rebuild();
+    }
+
+    // Fixed z-order bands for the display priority stack (higher = more on top).
+    // Each band is far enough apart that per-item increments never collide.
+    private const int ZBase = 0;           // Layer 0: main-UI base effect (every key)
+    private const int ZBrightness = 250;   // Layer 0.5: base brightness (Multiply) — dims the base only
+    private const int ZStarlight = 500;    // Layer 0.7: Starlight overlay — above base, below other overlays
+    private const int ZAudio = 1_000;      // Layer 1: global Audio overlay
+    private const int ZZoneOther = 10_000; // Layer 2: non-audio zones
+    private const int ZZoneAudio = 20_000; // Layer 3: audio zones
+    private const int ZReactive = 30_000;  // Layer 4: global Reactive overlay
+    private const int ZMetrics = 500_000;  // Layer 5: system-metric bars (top)
+
+    private void Rebuild()
+    {
+        var engine = _engine;
+        if (engine is null) return;
+        engine.SetTargetFps(TargetFps);
+        var bar=LightBarMode==DecorationMode.Custom && !EnableCustomLayers?DecorationMode.FollowKeys:LightBarMode;
+        var eye=EyeMode==DecorationMode.Custom && !EnableCustomLayers?DecorationMode.FollowKeys:EyeMode;
+        bool spatial = ReferenceEquals(_profile, Falchion75Layout.Profile)
+            && (bar!=DecorationMode.FollowKeys || eye!=DecorationMode.FollowKeys);
+        engine.SetEffectLayers(BuildLayers(), spatial ? BuildLayers(spatial: true) : [], bar, eye,BuildOutputEnvelope());
+    }
+
+    internal IReadOnlyList<IEffectLayer> BuildLayers(bool spatial = false)
+    {
+        ref var keyLayer = ref (spatial ? ref _spatialKeyLayer : ref _keyLayer);
+        ref var keyLayerSettings = ref (spatial ? ref _spatialKeyLayerSettings : ref _keyLayerSettings);
+        var layers = new List<IEffectLayer>();
+        _screenColors.SetActive(_connected && _globalEffect == EffectChoice.Monet);
+
+        // Layer 0 — base effect from the main UI, covering every key.
+        AddEffectLayers(layers, "global", _globalEffect, _globalColor, KeyMask.All, baseZ: ZBase, options: BaseOptions, spatial: spatial);
+
+        // Layer 0.5 — base brightness: a Multiply layer that dims the base effect only.
+        // It sits below the Starlight overlay and every other overlay, so dimming the
+        // base never dims the stars/audio/metrics layered on top.
+        if (_brightness < 0.999)
+        {
+            byte b = (byte)Math.Clamp(_brightness * 255.0, 0, 255);
+            layers.Add(new SolidLayer("base-brightness", new Rgb(b, b, b), KeyMask.All,
+                                      zOrder: ZBrightness, blend: BlendMode.Multiply));
+        }
+
+        if (!EnableCustomLayers) return layers;
+
+        // Layer 0.7 — Starlight overlay. Over-blended so the (possibly dimmed) base
+        // shows through the dark gaps between stars while lit stars sit on top — the
+        // "dim base + twinkling stars" look for a dark room.
+        if (EnableStarlight)
+        {
+            layers.Add(new StarlightLayer("starlight-overlay", KeyMask.All,
+                                          zOrder: ZStarlight, blend: BlendMode.Over));
+        }
+
+        // Layer 1 — global Audio overlay. Additive so silent frames are transparent
+        // and the base effect shows through. Spectrum and bars are mutually exclusive.
+        if (EnableAudio)
+        {
+            if (AudioLayout == AudioLayoutChoice.Bars)
+            {
+                layers.Add(new AudioBarsLayer("audio", _sensors,
+                                              AudioBarRows.BassRow(_profile),
+                                              AudioBarRows.MidRow(_profile),
+                                              AudioBarRows.TrebleRow(_profile),
+                                              bassMultiplier: AudioBarsBassMultiplier,
+                                              midMultiplier: AudioBarsMidMultiplier,
+                                              trebleMultiplier: AudioBarsTrebleMultiplier,
+                                              zOrder: ZAudio, blend: BlendMode.Over));
+            }
+            else
+            {
+                layers.Add(new AudioReactiveLayer("audio", _sensors, KeyMask.All,
+                                                  sensitivity: AudioSensitivity, zOrder: ZAudio,
+                                                  blend: BlendMode.Over));
+            }
+        }
+
+        // Layers 2 & 3 — zone overrides. Non-audio zones sit below all audio zones,
+        // so a zone spectrum always wins over a static zone on overlapping keys.
+        int zOther = ZZoneOther;
+        int zAudio = ZZoneAudio;
+        foreach (Zone zone in _zones)
+        {
+            if (zone.KeyIndices.Count == 0)
+            {
+                continue;
+            }
+            KeyMask mask = KeyMask.FromIndices(zone.KeyIndices.Where(i=>i>=0 && i<_profile.LedCount).ToArray());
+            bool isAudioZone = zone.Effect == EffectChoice.Audio;
+            int baseZ = isAudioZone ? zAudio : zOther;
+            AddZoneEffectLayers(layers,$"zone-{baseZ}",zone,mask,baseZ,spatial);
+            if (isAudioZone) { zAudio += 10; } else { zOther += 10; }
+        }
+
+        // Layer 4 — global Reactive overlay (keypress flare + ripple). Additive
+        // overlays only touch pressed keys, so everything below shows through when idle.
+        if (EnableReactive)
+        {
+            if (PresetCatalog.KeyPatternFor(ReactiveEffect) is {} keyKind)
+            {
+                var configuration=(ReactiveEffect,ReactiveColor,ReactiveOptions,ReactiveBrightness);
+                if (keyLayer is null || keyLayerSettings != configuration)
+                {
+                    keyLayer=new ReactivePatternLayer("key-interaction",keyKind,ReactiveColor,KeyMask.All,ReactiveOptions,ZReactive,ReactiveBrightness);
+                    keyLayerSettings=configuration;
+                }
+                if (ReactiveBrightness > 0) layers.Add(keyLayer);
+            }
+            else
+            {
+                keyLayer=null; keyLayerSettings=null;
+                layers.Add(new KeypressFadeLayer("reactive-fade", Rgb.White, fadeSeconds: 0.6, zOrder: ZReactive));
+                layers.Add(new RippleLayer("reactive-ripple", new Rgb(0, 180, 255), speedGridPerSec: 14,
+                                           width: 0.65, fadeSeconds: 0.8, zOrder: ZReactive + 10));
+            }
+        }
+        else { keyLayer=null; keyLayerSettings=null; }
+
+        // Layer 5 — system-metric bars on top of every effect and zone.
+        if (ShowMetrics)
+        {
+            layers.Add(new MetricOverlayLayer("metrics", _sensors, MetricLayouts.Build(MetricLayout, _profile),
+                                              PercentThresholds, TempThresholds, zOrder: ZMetrics));
+        }
+
+        if(spatial && ReferenceEquals(_profile,Falchion75Layout.Profile))
+        {
+            if(LightBarMode==DecorationMode.Custom)
+            {
+                layers.Add(new DecorationLayer("custom-strip",_sensors,BarEffect,83,12,ZMetrics+100));
+                if(BarEffect.Effect==DecorationEffect.Segmented)
+                {
+                    int z=ZMetrics+110;
+                    foreach(var zone in _zones.OrderBy(z=>z.Effect==EffectChoice.Audio?1:0))
+                    {
+                        var indices=zone.KeyIndices.Where(i=>i>=83 && i<95).ToArray();
+                        if(indices.Length==0)continue;
+                        AddZoneEffectLayers(layers,$"strip-zone-{z}",zone,KeyMask.FromIndices(indices),z,spatial:true);z+=10;
+                    }
+                    byte gain=(byte)Math.Round(Math.Clamp(double.IsFinite(BarEffect.Brightness)?BarEffect.Brightness:1,0,1)*255);
+                    layers.Add(new SolidLayer("strip-zone-brightness",new Rgb(gain,gain,gain),KeyMask.FromIndices(Enumerable.Range(83,12).ToArray()),z,BlendMode.Multiply));
+                }
+            }
+            if(EyeMode==DecorationMode.Custom)layers.Add(new DecorationLayer("custom-eye",_sensors,EyeEffect,95,1,ZMetrics+100));
+        }
+        return layers;
+    }
+
+    private void AddZoneEffectLayers(List<IEffectLayer> layers,string id,Zone zone,KeyMask mask,int z,bool spatial)
+    {
+        AddEffectLayers(layers,id,zone.Effect,zone.Color,mask,z,zone.AudioMode,ZoneMapping.Options(zone),spatial);
+        double alpha=ZoneMapping.Brightness(zone);
+        if(alpha<.999)
+        {
+            byte gain=(byte)Math.Round(alpha*255);
+            layers.Add(new SolidLayer(id+"-brightness",new Rgb(gain,gain,gain),mask,z+1,BlendMode.Multiply));
+        }
+    }
+
+    // Maps a base/zone effect choice to its layer(s), masked to the given keys.
+    // Reactive and the global Audio overlay are composed directly in Rebuild, not here.
+    private void AddEffectLayers(List<IEffectLayer> layers, string id, EffectChoice effect,
+                                 Rgb color, KeyMask mask, int baseZ,
+                                 AudioZoneMode audioMode = AudioZoneMode.Spectrum, PatternOptions? options = null, bool spatial = false)
+    {
+        // A zone has an explicit colour editor and no implicit rainbow palette.
+        options ??= new PatternOptions {Rainbow=id=="global" && PresetCatalog.DefaultRainbow(effect)};
+        if (PresetCatalog.MusicFor(effect) is { } music)
+        {
+            var settings=options ?? new PatternOptions();
+            lock(_musicLayers)
+            {
+                string key=$"{id}:{baseZ}:{spatial}";
+                if(!_musicLayers.TryGetValue(key,out var cached) || cached.Kind!=music || cached.Color!=color || cached.Options!=settings || !Enumerable.Range(0,spatial && ReferenceEquals(_profile,Falchion75Layout.Profile)?Falchion75Layout.SpatialProfile.LedCount:_profile.LedCount).All(i=>cached.Layer.Mask.Contains(i)==mask.Contains(i)))
+                    _musicLayers[key]=(music,color,settings,new MusicLayer(id,music,_sensors,color,mask,settings,baseZ));
+                layers.Add(_musicLayers[key].Layer);
+            }
+            return;
+        }
+        if (effect == EffectChoice.Monet)
+        {
+            layers.Add(new ScreenPaletteLayer(id,_screenColors,mask,options ?? new PatternOptions(),baseZ,color:color));
+            return;
+        }
+        if (PresetCatalog.PatternFor(effect) is { } pattern)
+        {
+            layers.Add(new PatternLayer(id, pattern, color, mask,
+                options ?? new PatternOptions { Rainbow = PresetCatalog.DefaultRainbow(effect) }, baseZ));
+            return;
+        }
+        switch (effect)
+        {
+            case EffectChoice.Off:
+                layers.Add(new SolidLayer(id, Rgb.Black, mask, baseZ));
+                break;
+            case EffectChoice.Starlight:
+                layers.Add(new StarlightLayer(id, mask, zOrder: baseZ,color:id=="global" || options.Rainbow?null:color));
+                break;
+            case EffectChoice.CpuTemp:
+                layers.Add(new TempIndicatorLayer(id, _sensors, gpu: false, mask, zOrder: baseZ));
+                break;
+            case EffectChoice.GpuTemp:
+                layers.Add(new TempIndicatorLayer(id, _sensors, gpu: true, mask, zOrder: baseZ));
+                break;
+            case EffectChoice.Atk:
+                if (_atkScene is not null) layers.Add(new AtkSceneLayer(id, _atkScene, mask, baseZ, options?.Speed ?? 1, _sensors));
+                else layers.Add(new SolidLayer(id, Rgb.Black, mask, baseZ));
+                break;
+            case EffectChoice.Gif:
+                // Play the imported animation; show nothing until one is imported.
+                if (_gifAnim is not null)
+                {
+                    layers.Add(new GifLayer(id, _gifAnim, mask, baseZ, speed: options?.Speed ?? 1));
+                }
+                else
+                {
+                    layers.Add(new SolidLayer(id, Rgb.Black, mask, baseZ));
+                }
+                break;
+            case EffectChoice.Audio:
+                switch (audioMode)
+                {
+                    case AudioZoneMode.SolidColor:
+                        layers.Add(new AudioVolumeLayer(id, _sensors, mask, color, rainbow: false,
+                                                        sensitivity: AudioSensitivity, zOrder: baseZ));
+                        break;
+                    case AudioZoneMode.SolidRainbow:
+                        layers.Add(new AudioVolumeLayer(id, _sensors, mask, Rgb.White, rainbow: true,
+                                                        sensitivity: AudioSensitivity, zOrder: baseZ));
+                        break;
+                    default:
+                        layers.Add(new AudioReactiveLayer(id, _sensors, mask, sensitivity: AudioSensitivity, zOrder: baseZ,color:id=="global" || options.Rainbow?null:color));
+                        break;
+                }
+                break;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        IsRunning = false;
+
+        // Stop the lifecycle loop and the current engine, then wait for it to unwind.
+        _lifecycleCts?.Cancel();
+        _engineCts?.Cancel();
+        if (_lifecycleTask is not null)
+        {
+            try { await _lifecycleTask.ConfigureAwait(false); } catch { /* shutting down */ }
+            _lifecycleTask = null;
+        }
+
+        await TeardownConnectionAsync().ConfigureAwait(false);
+
+        _lifecycleCts?.Dispose();
+        _lifecycleCts = null;
+        await _screenColors.DisposeAsync().ConfigureAwait(false);
+        (_log as IDisposable)?.Dispose();
+    }
+
+    private void OnKey(KeyEvent keyEvent) => _engine?.EnqueueKeyEvent(keyEvent);
+}

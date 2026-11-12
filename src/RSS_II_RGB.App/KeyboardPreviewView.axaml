@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RSS_II_RGB.App"
+             xmlns:p="using:Avalonia.Controls.Primitives"
+             x:Class="RSS_II_RGB.App.KeyboardPreviewView"
+             x:DataType="vm:ZoneEditorViewModel">
+    <Border Classes="keyboard-shell">
+        <StackPanel Spacing="6">
+            <StackPanel IsVisible="{Binding HasLightBar}" Margin="18,0" Spacing="3" ToolTip.Tip="{x:Static vm:L.LightBarHint}">
+                <TextBlock Text="{x:Static vm:L.LightBarLabel}" Classes="muted" HorizontalAlignment="Center" FontSize="10"/>
+                <ItemsControl ItemsSource="{Binding LightBarSegments}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="13"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:KeyVM">
+                        <Grid Height="22" Background="Transparent" ToolTip.Tip="{Binding Name}" PointerPressed="OnDecorationPressed">
+                            <Border BorderBrush="#FF003C" BorderThickness="1" CornerRadius="3" IsVisible="{Binding IsSelected}" IsHitTestVisible="False"/>
+                            <Border IsVisible="{Binding !IsRogEye}" Background="{Binding PreviewBrush}" Height="8" CornerRadius="2" Margin="1,0" VerticalAlignment="Center"/>
+                            <Path IsVisible="{Binding IsRogEye}" Data="{StaticResource RogEyeGeometry}" Fill="{Binding PreviewBrush}"
+                                  Stroke="#555D6B" StrokeThickness="0.6" Width="38" Height="21" Stretch="Uniform"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+                        <Viewbox Stretch="Uniform" MaxHeight="250" HorizontalAlignment="Stretch">
+                            <Grid x:Name="KeyboardHost" Background="Transparent"
+                                  Width="{Binding HostWidth}" Height="{Binding HostHeight}"
+                                  PointerPressed="OnKeyboardPointerPressed" PointerMoved="OnKeyboardPointerMoved"
+                                  PointerReleased="OnKeyboardPointerReleased" PointerCaptureLost="OnSelectionCaptureLost">
+                                <ItemsControl ItemsSource="{Binding Keys}" IsEnabled="{Binding CanSelectKeys}" Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}"
+                                              Margin="{Binding KeysMargin}" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.Styles>
+                                        <Style Selector="ContentPresenter" x:DataType="vm:KeyVM">
+                                            <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                            <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                        </Style>
+                                    </ItemsControl.Styles>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:KeyVM">
+                                            <ToggleButton Classes="key" IsChecked="{Binding IsSelected}" Width="{Binding Width}" Height="{Binding Height}"
+                                                          Background="{Binding PreviewBrush}" Foreground="{Binding PreviewForeground}"
+                                                          FontSize="{Binding LabelSize}" Content="{Binding ShortLabel}" ToolTip.Tip="{Binding Name}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Rectangle x:Name="SelectionRect" IsHitTestVisible="False" IsVisible="False"
+                                           HorizontalAlignment="Left" VerticalAlignment="Top"
+                                           Fill="#33E6002D" Stroke="#D0FF3B5A" StrokeThickness="1"/>
+                            </Grid>
+                        </Viewbox>
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
+                <TextBlock Classes="muted" Text="{Binding SelectionText}" IsVisible="{Binding CanSelectKeys}" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Classes="quiet" Content="{x:Static vm:L.SelectAll}" Command="{Binding SelectAllCommand}" IsVisible="{Binding CanSelectKeys}" FontSize="11"/>
+                <Button Grid.Column="2" Classes="quiet" Content="{x:Static vm:L.ClearSelection}" Command="{Binding SelectNoneCommand}" IsVisible="{Binding CanSelectKeys}" FontSize="11"/>
+                <TextBlock Grid.Column="4" Classes="muted" Text="{Binding PreviewStatus}" ToolTip.Tip="{x:Static vm:L.PreviewHint}" VerticalAlignment="Center"/>
+            </Grid>
+                        <ItemsControl ItemsSource="{Binding SelectedKeys}" IsVisible="{Binding CanSelectKeys}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:KeyVM">
+                                    <Border Background="#20242D" BorderBrush="#424A59" BorderThickness="1" CornerRadius="5" Padding="8,3" Margin="0,0,6,4">
+                                        <TextBlock Text="{Binding ShortLabel}" FontSize="11"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+        </StackPanel>
+    </Border>
+</UserControl>

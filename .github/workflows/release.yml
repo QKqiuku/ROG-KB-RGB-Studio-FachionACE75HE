@@ -1,0 +1,46 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore ROG-KB-RGB-Studio.slnx -p:PublishAot=false -p:NuGetAudit=true
+      - name: Full rebuild
+        run: dotnet build ROG-KB-RGB-Studio.slnx -t:Rebuild -c Release --no-restore -p:PublishAot=false -p:SkipHelperCopy=true
+      - name: Test
+        run: dotnet test ROG-KB-RGB-Studio.slnx -c Release --no-build --no-restore
+  release:
+    needs: build-test
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build Full and Lite self-contained packages, notices and corresponding source
+        shell: pwsh
+        run: ./tools/Publish-Studio.ps1 -SkipChecks
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            dist/ROG-KB-RGB-Studio-win-x64-full.zip
+            dist/ROG-KB-RGB-Studio-win-x64-lite.zip
+            dist/ROG-KB-RGB-Studio-source.zip
+            dist/SHA256SUMS.txt
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          prerelease: true

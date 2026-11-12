@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RSS_II_RGB.App" x:Class="RSS_II_RGB.App.ZoneEffectParametersView" x:DataType="vm:ZoneEditorViewModel">
+    <StackPanel Spacing="12">
+        <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding ZoneEffectName}" FontSize="17" FontWeight="SemiBold"/><Button Grid.Column="1" Content="{x:Static vm:L.ResetCurrentEffect}" Command="{Binding ResetZoneParametersCommand}" Focusable="False"/></Grid>
+        <TextBlock Text="{x:Static vm:L.ZoneParameterHint}" TextWrapping="Wrap" Opacity="0.7"/>
+        <CheckBox Content="{x:Static vm:L.RainbowColorsLabel}" IsChecked="{Binding ZoneRainbow}" IsVisible="{Binding ZoneHasRainbow}" Focusable="False"/>
+        <ColorPicker Color="{Binding ZoneColor}" IsAlphaEnabled="False" IsVisible="{Binding !ZoneIsSoundWave}"/>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding ZoneIsSoundWave}">
+            <StackPanel><TextBlock Text="{x:Static vm:L.WaveColor1Label}"/><ColorPicker Color="{Binding ZoneWaveColor1}" IsAlphaEnabled="False"/></StackPanel>
+            <StackPanel Grid.Column="1"><TextBlock Text="{x:Static vm:L.WaveColor2Label}"/><ColorPicker Color="{Binding ZoneWaveColor2}" IsAlphaEnabled="False"/></StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="18" RowSpacing="10">
+            <StackPanel IsVisible="{Binding ZoneHasSpeed}"><TextBlock Text="{x:Static vm:L.SpeedLabel}"/><TextBlock Text="{Binding ZoneSpeed, StringFormat='{}{0:0.0}×'}"/><Slider Minimum="0.1" Maximum="5" Value="{Binding ZoneSpeed}"/></StackPanel>
+            <StackPanel Grid.Column="1" IsVisible="{Binding ZoneHasWidth}"><TextBlock Text="{x:Static vm:L.WidthLabel}"/><TextBlock Text="{Binding ZoneWidth, StringFormat='{}{0:0.0}'}"/><Slider Minimum="0.25" Maximum="3" Value="{Binding ZoneWidth}"/></StackPanel>
+            <StackPanel Grid.Row="1" IsVisible="{Binding ZoneHasDensity}"><TextBlock Text="{x:Static vm:L.DensityLabel}"/><TextBlock Text="{Binding ZoneDensity, StringFormat='{}{0:0}%'}"/><Slider Minimum="5" Maximum="100" Value="{Binding ZoneDensity}"/></StackPanel>
+            <StackPanel Grid.Row="1" Grid.Column="1" IsVisible="{Binding ZoneShowSaturation}"><TextBlock Text="{x:Static vm:L.SaturationLabel}"/><TextBlock Text="{Binding ZoneSaturation, StringFormat='{}{0:0}%'}"/><Slider Minimum="0" Maximum="100" Value="{Binding ZoneSaturation}"/></StackPanel>
+            <StackPanel Grid.Row="2"><TextBlock Text="{x:Static vm:L.KeyBrightnessLabel}"/><TextBlock Text="{Binding ZoneBrightness, StringFormat='{}{0:0}%'}"/><Slider Minimum="0" Maximum="100" Value="{Binding ZoneBrightness}"/></StackPanel>
+            <StackPanel Grid.Row="2" Grid.Column="1" IsVisible="{Binding ZoneHasGeometry}"><TextBlock Text="{x:Static vm:L.DirectionLabel}"/><TextBlock Text="{Binding ZoneDirection, StringFormat='{}{0:0}°'}"/><Slider Minimum="0" Maximum="360" Value="{Binding ZoneDirection}"/></StackPanel>
+        </Grid>
+        <WrapPanel IsVisible="{Binding ZoneHasGeometry}">
+            <CheckBox Content="{x:Static vm:L.MirrorHorizontal}" IsChecked="{Binding ZoneMirrorX}" Margin="0,0,14,0" Focusable="False"/>
+            <CheckBox Content="{x:Static vm:L.MirrorVertical}" IsChecked="{Binding ZoneMirrorY}" Focusable="False"/>
+        </WrapPanel>
+    </StackPanel>
+</UserControl>

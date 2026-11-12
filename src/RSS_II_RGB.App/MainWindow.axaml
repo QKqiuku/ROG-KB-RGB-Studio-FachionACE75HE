@@ -1,0 +1,406 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RSS_II_RGB.App" xmlns:p="using:Avalonia.Controls.Primitives"
+        x:Class="RSS_II_RGB.App.MainWindow" x:DataType="vm:MainViewModel"
+        Icon="/Assets/Mainicon.ico" Classes="workbench" Title="{x:Static vm:AppConstants.AppTitle}"
+        Width="1480" Height="980" MinWidth="1040" MinHeight="760" WindowStartupLocation="CenterScreen">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="26,18,26,12" RowSpacing="16" MaxWidth="1520" IsEnabled="{Binding !IsSavingUserPreset}">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="18">
+            <StackPanel Spacing="3">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Path Data="{StaticResource AppMarkGeometry}" Fill="{StaticResource RogAccentBrush}" Width="34" Height="34" Stretch="Uniform" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static vm:AppConstants.AppTitle}" FontSize="22" FontWeight="SemiBold"/>
+                </StackPanel>
+                <TextBlock Text="{Binding DeviceName}" Classes="muted"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Ellipse Fill="{Binding StatusBrush}" Width="8" Height="8"/>
+                <TextBlock Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" MaxWidth="300" TextWrapping="Wrap"/>
+                <TextBlock Text="{x:Static vm:L.TargetFrameRateLabel}" FontSize="11" VerticalAlignment="Center" ToolTip.Tip="{x:Static vm:L.FrameRateHint}"/>
+                <ListBox Classes="frame-rate" ItemsSource="{Binding FrameRateOptions}" SelectedItem="{Binding TargetFps, Mode=TwoWay}"
+                         SelectionMode="Single,AlwaysSelected" ToolTip.Tip="{x:Static vm:L.FrameRateHint}"
+                         AutomationProperties.Name="{x:Static vm:L.TargetFrameRateLabel}">
+                    <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate><DataTemplate x:DataType="x:Int32"><TextBlock Text="{Binding}"/></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+            <Button Grid.Column="2" Classes="quiet" Content="{x:Static vm:L.RestoreAndExit}" Click="OnExit" VerticalAlignment="Center"/>
+        </Grid>
+        <StackPanel Grid.Row="1" Spacing="8">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+                    <vm:KeyboardPreviewView DataContext="{Binding Editor}" Width="640" VerticalAlignment="Center"/>
+                    <Border Classes="card" IsVisible="{Binding IsMusicEffect}" Padding="14" VerticalAlignment="Center">
+                        <StackPanel Spacing="8" Width="655">
+                            <TextBlock Classes="section" Text="{x:Static vm:L.MusicCanvasTitle}"/>
+                            <TextBlock Classes="muted" Text="{Binding CurrentEffectName}"/>
+                            <vm:MusicCanvasView/>
+                            <TextBlock Classes="muted" Text="{Binding MusicCanvasHintText}" FontSize="11" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+            <StackPanel IsVisible="{Binding HasDecorativeLighting}" Spacing="4" HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{x:Static vm:L.LightBarSettingsLabel}" VerticalAlignment="Center"/>
+                    <ComboBox SelectedIndex="{Binding LightBarModeIndex}" Focusable="False" MinWidth="190" AutomationProperties.Name="{x:Static vm:L.LightBarSettingsLabel}">
+                        <ComboBoxItem Content="{x:Static vm:L.DecorationFollow}"/>
+                        <ComboBoxItem Content="{x:Static vm:L.DecorationSpatial}"/>
+                        <ComboBoxItem IsEnabled="{Binding IsCustomMode}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{x:Static vm:L.DecorationCustom}"/>
+                                <TextBlock Text="{x:Static vm:L.DecorationRequiresCustom}" IsVisible="{Binding !IsCustomMode}" Classes="muted" FontSize="10"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                    </ComboBox>
+                    <TextBlock Text="{x:Static vm:L.EyeSettingsLabel}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <ComboBox SelectedIndex="{Binding EyeModeIndex}" Focusable="False" MinWidth="190" AutomationProperties.Name="{x:Static vm:L.EyeSettingsLabel}">
+                        <ComboBoxItem Content="{x:Static vm:L.DecorationFollow}"/>
+                        <ComboBoxItem Content="{x:Static vm:L.DecorationSpatial}"/>
+                        <ComboBoxItem IsEnabled="{Binding IsCustomMode}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{x:Static vm:L.DecorationCustom}"/>
+                                <TextBlock Text="{x:Static vm:L.DecorationRequiresCustom}" IsVisible="{Binding !IsCustomMode}" Classes="muted" FontSize="10"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <TextBlock Text="{x:Static vm:L.DecorationModeHint}" Classes="muted" FontSize="11" TextWrapping="Wrap" MaxWidth="850"/>
+            </StackPanel>
+        </StackPanel>
+        <Grid Grid.Row="2" ColumnDefinitions="350,*" ColumnSpacing="16">
+            <ScrollViewer x:Name="PresetScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <Border Classes="card">
+                        <StackPanel Spacing="10">
+                            <TextBlock Classes="section" Text="{x:Static vm:L.LightingEffects}"/>
+                            <WrapPanel>
+                                <Button Classes="quiet" Content="{x:Static vm:L.AtkGallery}" Click="OnOpenAtkGallery" Margin="0,0,8,4"/>
+                                <Button Classes="quiet" Content="{x:Static vm:L.GifImportButton}" IsEnabled="{Binding CanImportGif}" ToolTip.Tip="{Binding GifImportHint}" Click="OnImportGif" Margin="0,0,0,4"/>
+                            </WrapPanel>
+                            <TextBlock Text="{x:Static vm:L.GifComponentMissing}" IsVisible="{Binding !CanImportGif}" TextWrapping="Wrap" Classes="muted" FontSize="11"/>
+                            <WrapPanel>
+                                <Button Classes="quiet" Content="{Binding FavoriteAction}" Command="{Binding ToggleFavoriteCommand}" IsEnabled="{Binding CanFavorite}" Margin="0,0,6,4"/>
+                                <Button Classes="quiet" Content="{x:Static vm:L.RandomEffect}" Command="{Binding RandomPresetCommand}" Focusable="False" Margin="0,0,0,4"/>
+                            </WrapPanel>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.Favorites}"/>
+                            <ItemsControl ItemsSource="{Binding FavoritePresets}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:PresetItem"><Button Classes="preset" Content="{Binding Label}" Command="{Binding SelectCommand}" Margin="0,0,6,4"/></DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.Recent}"/>
+                            <ItemsControl ItemsSource="{Binding RecentPresets}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:PresetItem"><Button Classes="preset" Content="{Binding Label}" Command="{Binding SelectCommand}" Margin="0,0,6,4"/></DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.RegularEffects}"/>
+                            <ItemsControl ItemsSource="{Binding RegularPresets}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PresetItem">
+                                        <Button Classes="preset" Classes.selected="{Binding IsSelected}" Content="{Binding Label}" Command="{Binding SelectCommand}" Margin="0,0,7,9"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Classes="preset" Classes.selected="{Binding IsCustomMode}" Content="{x:Static vm:L.CustomMode}" Command="{Binding ChooseCustomCommand}" HorizontalAlignment="Left" MinWidth="96"/>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.UserPresetsLabel}"/>
+                            <ItemsControl ItemsSource="{Binding UserPresets}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:UserPresetItem">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                                            <Button Classes="preset" Classes.selected="{Binding IsSelected}" Command="{Binding LoadCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" ToolTip.Tip="{Binding Name}" Focusable="False"><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/></Button>
+                                            <Button Grid.Column="1" Classes="quiet" Content="{x:Static vm:L.DeleteUserPresetLabel}" Command="{Binding DeleteCommand}" Focusable="False"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="{Binding UserPresetStatus}" IsVisible="{Binding !IsCustomMode}" TextWrapping="Wrap" Classes="muted"/>
+                            <Border Height="1" Background="#303641"/>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.AnimatedEffects}"/>
+                            <ItemsControl ItemsSource="{Binding AnimationPresets}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PresetItem">
+                                        <Button Classes="preset" Classes.selected="{Binding IsSelected}" Content="{Binding Label}" Command="{Binding SelectCommand}" Margin="0,0,7,9"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Border Height="1" Background="#303641"/>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.MusicCategory}"/>
+                            <ItemsControl ItemsSource="{Binding MusicPresets}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:PresetItem">
+                                    <Button Classes="preset" Classes.selected="{Binding IsSelected}" Content="{Binding Label}" Command="{Binding SelectCommand}" Margin="0,0,7,9"/>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border Height="1" Background="#303641"/>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.KeyEffectsLabel}"/>
+                            <ItemsControl ItemsSource="{Binding ReactivePresets}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:PresetItem">
+                                    <Button Classes="preset" Classes.selected="{Binding IsSelected}" Content="{Binding Label}" Command="{Binding SelectCommand}" Margin="0,0,7,9"/>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+            </ScrollViewer>
+            <ScrollViewer x:Name="ParameterScroll" Grid.Column="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="18" Margin="0,0,8,0">
+                    <Border Classes="card" IsVisible="{Binding IsCustomMode}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Classes="section" Text="{x:Static vm:L.SaveCompositionLabel}"/>
+                            <TextBox Text="{Binding UserPresetName}" Watermark="{x:Static vm:L.UserPresetNameHint}" MaxLength="48"/>
+                            <WrapPanel>
+                                <Button Classes="primary" Content="{x:Static vm:L.SaveUserPresetLabel}" Command="{Binding SaveUserPresetCommand}" Margin="0,0,8,6" Focusable="False"/>
+                                <Button Classes="quiet" Content="{x:Static vm:L.SaveUserPresetAsLabel}" Command="{Binding SaveUserPresetAsCommand}" Margin="0,0,8,6" Focusable="False"/>
+                                <Button Classes="quiet" Content="{x:Static vm:L.RestoreSavedComposition}" Command="{Binding RestoreUserPresetCommand}" Margin="0,0,0,6" Focusable="False"/>
+                            </WrapPanel>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.UserPresetHint}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding UserPresetStatus}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="card" IsVisible="{Binding IsCustomMode}">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="section" Text="{x:Static vm:L.OverallEffectLabel}"/><Button Grid.Column="1" Classes="quiet" Content="{x:Static vm:L.ResetCurrentEffect}" Command="{Binding ResetOverallEffectCommand}" Focusable="False"/></Grid>
+                            <ComboBox SelectedIndex="{Binding OverallModeIndex}" HorizontalAlignment="Stretch" Focusable="False">
+                                <ComboBoxItem Content="{x:Static vm:L.OverallConstant}"/>
+                                <ComboBoxItem Content="{x:Static vm:L.OverallBreathing}"/>
+                                <ComboBoxItem Content="{x:Static vm:L.OverallBeat}"/>
+                            </ComboBox>
+                            <TextBlock Text="{x:Static vm:L.OverallHint}" Classes="muted" TextWrapping="Wrap"/>
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="18">
+                                <StackPanel><TextBlock Text="{x:Static vm:L.OverallOpacityLabel}"/><TextBlock Text="{Binding OverallOpacity, StringFormat='{}{0:0}%'}"/><Slider Minimum="0" Maximum="100" Value="{Binding OverallOpacity}"/></StackPanel>
+                                <StackPanel Grid.Column="1" IsVisible="{Binding OverallAnimated}"><TextBlock Text="{x:Static vm:L.OverallMinimumLabel}"/><TextBlock Text="{Binding OverallMinimum, StringFormat='{}{0:0}%'}"/><Slider Minimum="0" Maximum="{Binding OverallOpacity}" Value="{Binding OverallMinimum}"/></StackPanel>
+                                <StackPanel Grid.Column="2" IsVisible="{Binding OverallAnimated}"><TextBlock Text="{x:Static vm:L.SpeedLabel}"/><TextBlock Text="{Binding OverallSpeed, StringFormat='{}{0:0.0}×'}"/><Slider Minimum="0.1" Maximum="5" Value="{Binding OverallSpeed}"/></StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="card" IsVisible="{Binding ShowBarEditor}">
+                        <StackPanel Spacing="10"><TextBlock Classes="section" Text="{x:Static vm:L.LightBarSettingsLabel}"/><TextBlock Text="{x:Static vm:L.DecorationCustomHint}" Classes="muted" TextWrapping="Wrap"/><vm:DecorationEditorView DataContext="{Binding BarEditor}"/></StackPanel>
+                    </Border>
+                    <Border Classes="card" IsVisible="{Binding ShowEyeEditor}">
+                        <StackPanel Spacing="10"><TextBlock Classes="section" Text="{x:Static vm:L.EyeSettingsLabel}"/><vm:DecorationEditorView DataContext="{Binding EyeEditor}"/></StackPanel>
+                    </Border>
+                    <Border Classes="card" IsVisible="{Binding ShowMusicControls}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Classes="section" Text="{x:Static vm:L.MusicAudioSource}"/>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <ComboBox Focusable="False" ItemsSource="{Binding MusicSources}" SelectedItem="{Binding SelectedMusicSource}" HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:MusicSourceItem"><TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis"/></DataTemplate></ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Grid.Column="1" Classes="quiet" Content="{x:Static vm:L.MusicRefreshSources}" Command="{Binding RefreshAudioSourcesCommand}" Focusable="False"/>
+                            </Grid>
+                            <TextBlock Classes="muted" Text="{Binding MusicCaptureStatus}" TextWrapping="Wrap"/>
+                            <ProgressBar Minimum="0" Maximum="100" Value="{Binding MusicSignalLevel}" Height="5"/>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.MusicSourceHint}" TextWrapping="Wrap" FontSize="11"/>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
+                                <StackPanel><TextBlock Text="{x:Static vm:L.MusicSensitivity}"/><TextBlock Text="{Binding MusicSensitivity,StringFormat='{}{0:0.00}×'}"/><Slider Minimum="0.1" Maximum="4" Value="{Binding MusicSensitivity}"/></StackPanel>
+                                <StackPanel Grid.Column="1"><TextBlock Text="{x:Static vm:L.MusicRelease}"/><TextBlock Text="{Binding MusicRelease,StringFormat='{}{0:0.00} s'}"/><Slider Minimum="0.02" Maximum="2" Value="{Binding MusicRelease}"/></StackPanel>
+                            </Grid>
+                            <Expander Header="{x:Static vm:L.MusicResponse}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                <StackPanel Spacing="8" Margin="0,10,0,0">
+                                    <CheckBox Content="{x:Static vm:L.MusicAutoGain}" IsChecked="{Binding MusicAutoGain}"/>
+                                    <TextBlock Text="{x:Static vm:L.MusicAttack}"/><TextBlock Text="{Binding MusicAttack,StringFormat='{}{0:0.000} s'}"/><Slider Minimum="0.005" Maximum="0.25" Value="{Binding MusicAttack}"/>
+                                    <TextBlock Text="{x:Static vm:L.MusicNoiseGate}"/><TextBlock Text="{Binding MusicNoiseGate,StringFormat='{}{0:0.0000}'}"/><Slider Minimum="0" Maximum="0.05" Value="{Binding MusicNoiseGate}"/>
+                                    <TextBlock Text="{x:Static vm:L.MusicBass}"/><TextBlock Text="{Binding MusicBassEmphasis,StringFormat='{}{0:0.00}×'}"/><Slider Minimum="0.25" Maximum="3" Value="{Binding MusicBassEmphasis}"/>
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="card" IsVisible="{Binding IsCustomMode}">
+                        <StackPanel Spacing="10">
+                            <CheckBox Content="{x:Static vm:L.KeyEffectsLabel}" IsChecked="{Binding EnableReactive}"/>
+                            <ComboBox Focusable="False" ItemsSource="{Binding ReactiveChoices}" SelectedItem="{Binding SelectedReactiveEffect}" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:EffectChoice"><TextBlock Text="{Binding Converter={x:Static vm:EnumDisplayConverter.Instance}}"/></DataTemplate></ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Classes="muted" Text="{x:Static vm:L.KeyEffectHint}" TextWrapping="Wrap"/>
+                            <StackPanel Spacing="8" IsVisible="{Binding ShowKeyControls}">
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="18">
+                                    <StackPanel><TextBlock Text="{x:Static vm:L.SpeedLabel}"/><TextBlock Text="{Binding ReactiveSpeed, StringFormat='{}{0:0.0}×'}"/><Slider Minimum="0.1" Maximum="5" Value="{Binding ReactiveSpeed}"/></StackPanel>
+                                    <StackPanel Grid.Column="1"><TextBlock Text="{x:Static vm:L.WidthLabel}"/><TextBlock Text="{Binding ReactiveWidth, StringFormat='{}{0:0.0}'}"/><Slider Minimum="0.25" Maximum="3" Value="{Binding ReactiveWidth}"/></StackPanel>
+                                    <StackPanel Grid.Column="2"><TextBlock Text="{x:Static vm:L.KeyBrightnessLabel}"/><TextBlock Text="{Binding ReactiveBrightness, StringFormat='{}{0:0}%'}"/><Slider Minimum="0" Maximum="100" Value="{Binding ReactiveBrightness}"/></StackPanel>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="14" IsVisible="{Binding ReactiveHasColor}">
+                                    <CheckBox Content="{x:Static vm:L.KeyPaletteLabel}" IsChecked="{Binding ReactivePalette}"/>
+                                    <CheckBox Content="{x:Static vm:L.KeyRainbowLabel}" IsChecked="{Binding ReactiveRainbow}"/>
+                                    <ColorPicker Color="{Binding ReactiveColor}" IsEnabled="{Binding ReactiveUsesCustomColor}" IsAlphaEnabled="False"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="card">
+                        <StackPanel Spacing="16">
+                                <WrapPanel IsVisible="{Binding CanTransform}">
+                                    <CheckBox Content="{x:Static vm:L.MirrorHorizontal}" IsChecked="{Binding MirrorX}" Margin="0,0,12,0"/>
+                                    <CheckBox Content="{x:Static vm:L.MirrorVertical}" IsChecked="{Binding MirrorY}" Margin="0,0,12,0"/>
+                                    <Button Classes="quiet" Content="{x:Static vm:L.RotateEffect}" Command="{Binding RotatePatternCommand}"/>
+                                </WrapPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="section" Text="{Binding CurrentEffectName}"/>
+                                <TextBlock Grid.Column="1" Classes="muted" Text="{Binding ModeText}" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Button Classes="quiet" Content="{x:Static vm:L.ResetCurrentEffect}" Command="{Binding ResetCurrentEffectCommand}" HorizontalAlignment="Right" Focusable="False"/>
+                            <TextBlock Classes="muted" Text="{Binding AtkStatusText}" IsVisible="{Binding IsAtkEffect}" TextWrapping="Wrap"/>
+                            <StackPanel IsVisible="{Binding IsCustomMode}" Spacing="6">
+                                <TextBlock Classes="muted" Text="{x:Static vm:L.CustomBaseLabel}"/>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                    <ComboBox Focusable="False" ItemsSource="{Binding Effects}" SelectedItem="{Binding SelectedEffect}" HorizontalAlignment="Stretch">
+                                        <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:EffectChoice"><TextBlock Text="{Binding Converter={x:Static vm:EnumDisplayConverter.Instance}}"/></DataTemplate></ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button Grid.Column="1" Classes="quiet" Content="{x:Static vm:L.EditCustomLayers}" Click="OnEditCustomLayers"/>
+                                </Grid>
+                            </StackPanel>
+                            <Grid ColumnDefinitions="*,1,*" ColumnSpacing="24">
+                                <StackPanel Spacing="9">
+                                    <TextBlock Text="{x:Static vm:L.EffectParameters}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <StackPanel Spacing="4" IsVisible="{Binding HasMotion}">
+                                        <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="muted" Text="{x:Static vm:L.SpeedLabel}"/><TextBlock Grid.Column="1" Text="{Binding EffectSpeed, StringFormat='{}{0:0.0}×'}"/></Grid>
+                                        <Slider Minimum="0.1" Maximum="5" Value="{Binding EffectSpeed}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="4">
+                                        <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="muted" Text="{x:Static vm:L.GlobalBrightnessLabel}"/><TextBlock Grid.Column="1" Text="{Binding BrightnessPercent, StringFormat='{}{0:0}%'}"/></Grid>
+                                        <Slider Minimum="0" Maximum="100" Value="{Binding BrightnessPercent}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="4" IsVisible="{Binding HasDirection}">
+                                        <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="muted" Text="{x:Static vm:L.DirectionLabel}"/><TextBlock Grid.Column="1" Text="{Binding EffectDirection, StringFormat='{}{0:0}°'}"/></Grid>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding EffectDirection}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="4" IsVisible="{Binding HasWidth}">
+                                        <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="muted" Text="{x:Static vm:L.WidthLabel}"/><TextBlock Grid.Column="1" Text="{Binding EffectWidth, StringFormat='{}{0:0.0}'}"/></Grid>
+                                        <Slider Minimum="0.25" Maximum="3" Value="{Binding EffectWidth}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="4" IsVisible="{Binding HasDensity}">
+                                        <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="muted" Text="{x:Static vm:L.DensityLabel}"/><TextBlock Grid.Column="1" Text="{Binding EffectDensity, StringFormat='{}{0:0}%'}"/></Grid>
+                                        <Slider Minimum="5" Maximum="100" Value="{Binding EffectDensity}"/>
+                                    </StackPanel>
+                                    <TextBlock Classes="muted" Text="{x:Static vm:L.BaseBrightnessHint}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#303641"/>
+                                <StackPanel Grid.Column="2" Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock FontWeight="SemiBold" Text="{x:Static vm:L.PaletteLabel}" VerticalAlignment="Center"/>
+                                        <CheckBox Grid.Column="1" Content="{x:Static vm:L.RainbowColorsLabel}" IsChecked="{Binding RainbowColors}" IsVisible="{Binding HasRainbow}" FontSize="11"/>
+                                    </Grid>
+                                    <StackPanel Spacing="8" IsVisible="{Binding IsSoundWave}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{x:Static vm:L.WaveColor1Label}" VerticalAlignment="Center"/>
+                                            <ColorPicker Grid.Column="1" Color="{Binding WaveColor1}" IsAlphaEnabled="False"/>
+                                        </Grid>
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{x:Static vm:L.WaveColor2Label}" VerticalAlignment="Center"/>
+                                            <ColorPicker Grid.Column="1" Color="{Binding WaveColor2}" IsAlphaEnabled="False"/>
+                                        </Grid>
+                                    </StackPanel>
+                                    <StackPanel Spacing="12" IsVisible="{Binding ShowSingleColor}">
+                                    <Grid ColumnDefinitions="*,22" ColumnSpacing="12" Height="190" IsEnabled="{Binding CanPickColor}">
+                                        <p:ColorSpectrum Shape="Ring" Components="HueSaturation" HsvColor="{Binding PickedHsv, Mode=TwoWay}"/>
+                                        <p:ColorSlider Grid.Column="1" HsvColor="{Binding PickedHsv, Mode=TwoWay}" ColorModel="Hsva" ColorComponent="Component3" Orientation="Vertical" IsAlphaVisible="False"/>
+                                    </Grid>
+                                    <TextBox Text="{Binding PickedHex}" Watermark="#00FF66" IsEnabled="{Binding CanPickColor}"/>
+                                    <TextBlock Text="{x:Static vm:L.InvalidHexColor}" IsVisible="{Binding InvalidColor}" Foreground="#FF7387" TextWrapping="Wrap" FontSize="11"/>
+                                    <WrapPanel IsEnabled="{Binding CanPickColor}">
+                                        <Button Classes="swatch" Background="#FF0000" Command="{Binding SetColorCommand}" CommandParameter="FF0000"/>
+                                        <Button Classes="swatch" Background="#FF9900" Command="{Binding SetColorCommand}" CommandParameter="FF9900"/>
+                                        <Button Classes="swatch" Background="#FFFF00" Command="{Binding SetColorCommand}" CommandParameter="FFFF00"/>
+                                        <Button Classes="swatch" Background="#00FF00" Command="{Binding SetColorCommand}" CommandParameter="00FF00"/>
+                                        <Button Classes="swatch" Background="#00FFFF" Command="{Binding SetColorCommand}" CommandParameter="00FFFF"/>
+                                        <Button Classes="swatch" Background="#0000FF" Command="{Binding SetColorCommand}" CommandParameter="0000FF"/>
+                                        <Button Classes="swatch" Background="#FF00FF" Command="{Binding SetColorCommand}" CommandParameter="FF00FF"/>
+                                        <Button Classes="swatch" Background="#FFFFFF" Command="{Binding SetColorCommand}" CommandParameter="FFFFFF"/>
+                                        <Button Classes="swatch" Background="#000000" Command="{Binding SetColorCommand}" CommandParameter="000000"/>
+                                    </WrapPanel>
+                                    </StackPanel>
+                                    <StackPanel Spacing="4" IsVisible="{Binding ShowSaturation}">
+                                        <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="muted" Text="{x:Static vm:L.SaturationLabel}"/><TextBlock Grid.Column="1" Text="{Binding EffectSaturation, StringFormat='{}{0:0}%'}"/></Grid>
+                                        <Slider Minimum="0" Maximum="100" Value="{Binding EffectSaturation}" IsEnabled="{Binding HasRainbow}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding GifStatusText}" IsVisible="{Binding IsGifEffect}" Classes="muted" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                <ContentControl x:Name="ZoneHost" IsVisible="{Binding IsCustomMode}">
+                    <vm:ZoneEditorView DataContext="{Binding Editor}"/>
+                </ContentControl>
+                <Border Classes="card" IsVisible="{Binding IsCustomMode}" Padding="16,4">
+                    <Expander Header="{x:Static vm:L.AdvancedHeader}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="10" Margin="6,12,6,14">
+            <TextBlock Text="{x:Static vm:L.OverlaysLabel}" FontWeight="SemiBold"/>
+            <CheckBox Content="{x:Static vm:L.StarlightOverlay}"
+                      IsChecked="{Binding EnableStarlight}" IsEnabled="{Binding IsConnected}"/>
+            <CheckBox Content="{x:Static vm:L.AudioOverlay}"
+                      IsChecked="{Binding EnableAudio}" IsEnabled="{Binding IsConnected}"/>
+            <TextBlock Text="{x:Static vm:L.AudioLayoutLabel}" FontWeight="SemiBold"/>
+            <ComboBox ItemsSource="{Binding AudioLayoutOptions}" SelectedItem="{Binding AudioLayout}"
+                      HorizontalAlignment="Stretch" IsEnabled="{Binding EnableAudio}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AudioLayoutChoice">
+                        <TextBlock Text="{Binding Converter={x:Static vm:EnumDisplayConverter.Instance}}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Text="{x:Static vm:L.PriorityHint}"
+                       Opacity="0.6" TextWrapping="Wrap"/>
+
+            <TextBlock Text="{Binding AudioSensitivityText}" FontWeight="SemiBold"/>
+            <Slider Minimum="0.5" Maximum="4" Value="{Binding AudioSensitivity}" IsEnabled="{Binding IsConnected}"/>
+
+            <TextBlock Text="{Binding AudioBarsBassText}" FontWeight="SemiBold"
+                       IsVisible="{Binding IsAudioBarsLayout}"/>
+            <Slider Minimum="0.3" Maximum="3" Value="{Binding AudioBarsBassMultiplier}"
+                    IsEnabled="{Binding IsConnected}" IsVisible="{Binding IsAudioBarsLayout}"/>
+            <TextBlock Text="{Binding AudioBarsMidText}" FontWeight="SemiBold"
+                       IsVisible="{Binding IsAudioBarsLayout}"/>
+            <Slider Minimum="0.3" Maximum="3" Value="{Binding AudioBarsMidMultiplier}"
+                    IsEnabled="{Binding IsConnected}" IsVisible="{Binding IsAudioBarsLayout}"/>
+            <TextBlock Text="{Binding AudioBarsTrebleText}" FontWeight="SemiBold"
+                       IsVisible="{Binding IsAudioBarsLayout}"/>
+            <Slider Minimum="0.3" Maximum="3" Value="{Binding AudioBarsTrebleMultiplier}"
+                    IsEnabled="{Binding IsConnected}" IsVisible="{Binding IsAudioBarsLayout}"/>
+
+            <TextBlock Text="{x:Static vm:L.GifLabel}" FontWeight="SemiBold"/>
+            <Button Content="{x:Static vm:L.GifImportButton}" IsEnabled="{Binding CanImportGif}" ToolTip.Tip="{Binding GifImportHint}" Click="OnImportGif" HorizontalAlignment="Left"/>
+            <TextBlock Text="{Binding GifStatusText}" Opacity="0.8" TextWrapping="Wrap"/>
+
+            <CheckBox Content="{x:Static vm:L.StartWithWindows}"
+                      IsVisible="{Binding CanStartWithWindows}"
+                      IsChecked="{Binding StartWithWindows}"/>
+
+            <Expander Header="{x:Static vm:L.SystemMetricsHeader}" IsEnabled="{Binding IsConnected}">
+                <StackPanel Spacing="8" Margin="0,8,0,0">
+                    <CheckBox Content="{x:Static vm:L.ShowMetricBars}" IsChecked="{Binding ShowMetrics}"/>
+                    <TextBlock Text="{x:Static vm:L.LayoutLabel}" FontWeight="SemiBold"/>
+                    <ComboBox ItemsSource="{Binding MetricLayoutOptions}" SelectedItem="{Binding MetricLayout}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MetricLayoutChoice">
+                                <TextBlock Text="{Binding Converter={x:Static vm:EnumDisplayConverter.Instance}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Text="{x:Static vm:L.UtilisationThresholds}" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <NumericUpDown Value="{Binding Pct1}" Minimum="0" Maximum="100" Width="130"/>
+                        <NumericUpDown Value="{Binding Pct2}" Minimum="0" Maximum="100" Width="130"/>
+                        <NumericUpDown Value="{Binding Pct3}" Minimum="0" Maximum="100" Width="130"/>
+                    </StackPanel>
+                    <TextBlock Text="{x:Static vm:L.GpuTempThresholds}" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <NumericUpDown Value="{Binding Temp1}" Minimum="0" Maximum="120" Width="130"/>
+                        <NumericUpDown Value="{Binding Temp2}" Minimum="0" Maximum="120" Width="130"/>
+                        <NumericUpDown Value="{Binding Temp3}" Minimum="0" Maximum="120" Width="130"/>
+                    </StackPanel>
+                    <TextBlock Text="{x:Static vm:L.MetricMappingHint}"
+                               Opacity="0.6" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Expander>
+
+
+                        </StackPanel>
+                    </Expander>
+                </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+        <TextBlock Grid.Row="3" Classes="muted" Text="{x:Static vm:L.AutoSavedText}"/>
+    </Grid>
+</Window>

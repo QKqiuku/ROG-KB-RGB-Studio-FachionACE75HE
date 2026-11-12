@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RSS_II_RGB.App" x:Class="RSS_II_RGB.App.AtkGalleryWindow" x:DataType="vm:AtkGalleryViewModel"
+        Classes="workbench" Title="{x:Static vm:L.AtkGallery}" Width="1080" Height="730" MinWidth="920" MinHeight="620"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14">
+        <StackPanel Spacing="6">
+            <TextBlock Text="{x:Static vm:L.AtkGallery}" FontSize="22" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Static vm:L.AtkGalleryHint}" Classes="muted" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding LayoutFilterHint}" Classes="muted" TextWrapping="Wrap"/>
+        </StackPanel>
+        <Grid Grid.Row="1" ColumnDefinitions="140,*,Auto" ColumnSpacing="10" IsEnabled="{Binding !IsBusy}">
+            <ComboBox ItemsSource="{Binding SortOptions}" SelectedIndex="{Binding SortIndex}" SelectionChanged="OnSortChanged" HorizontalAlignment="Stretch"/>
+            <TextBox Grid.Column="1" Text="{Binding Keyword}" Watermark="{x:Static vm:L.AtkSearchHint}" MaxLength="64" KeyDown="OnSearchKey"/>
+            <Button Grid.Column="2" Content="{x:Static vm:L.AtkSearch}" Click="OnSearch" Classes="quiet"/>
+        </Grid>
+        <Grid Grid.Row="2" ColumnDefinitions="300,*" ColumnSpacing="16">
+            <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" IsEnabled="{Binding !IsBusy}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AtkPreset">
+                        <StackPanel Spacing="5" Margin="4,8">
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding Author}" FontSize="11"/>
+                            <TextBlock Text="{Binding Compatibility}" Classes="muted" FontSize="11"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Border Grid.Column="1" Classes="card">
+                <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" RowSpacing="12">
+                    <TextBlock Text="{Binding SelectedItem.Title}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="1" Text="{Binding SelectedItem.Author}" Classes="muted"/>
+                    <Viewbox Grid.Row="2" Stretch="Uniform" MaxHeight="240">
+                        <ItemsControl ItemsSource="{Binding Keys}" Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.Styles>
+                                <Style Selector="ContentPresenter" x:DataType="vm:KeyVM">
+                                    <Setter Property="Canvas.Left" Value="{Binding X}"/><Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                </Style>
+                            </ItemsControl.Styles>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:KeyVM">
+                                    <Border Width="{Binding Width}" Height="{Binding Height}" Background="{Binding PreviewBrush}" CornerRadius="5" BorderBrush="#414855" BorderThickness="1">
+                                        <TextBlock Text="{Binding ShortLabel}" Foreground="{Binding PreviewForeground}" FontSize="{Binding LabelSize}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Viewbox>
+                    <TextBlock Grid.Row="3" Text="{x:Static vm:L.AtkPreviewHint}" Classes="muted" TextWrapping="Wrap"/>
+                    <StackPanel Grid.Row="4" Spacing="5">
+                        <ComboBox ItemsSource="{Binding MappingOptions}" SelectedIndex="{Binding MappingIndex}" IsEnabled="{Binding !IsBusy}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="{x:Static vm:L.AtkLayoutHint}" Classes="muted" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="5" Text="{Binding PreviewStatus}" TextWrapping="Wrap"/>
+                    <Button Grid.Row="6" Classes="primary" Content="{x:Static vm:L.AtkApply}" IsEnabled="{Binding CanApply}" Click="OnApply" HorizontalAlignment="Stretch"/>
+                </Grid>
+            </Border>
+        </Grid>
+        <TextBlock Grid.Row="3" Text="{Binding Status}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+    </Grid>
+</Window>
