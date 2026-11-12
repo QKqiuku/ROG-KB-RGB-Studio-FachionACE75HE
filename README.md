@@ -35,6 +35,30 @@
 
 这些灯效会继续根据实体键盘上的表现调整，欢迎反馈效果问题或提出新的创意。
 
+## 想要更多灯效？
+
+- **直接找动画**：打开软件内的 **ATK 灯效广场**，浏览、预览并导入匹配当前配列的逐帧动画。
+- **提供灯效创意**：欢迎提交 PR，新增灯效描述文档或实现代码。只提供描述也可以，建议附上参考视频或 GIF，并说明配色、运动规律、触发方式和希望可调的参数，便于讨论与实现。
+- **自己编写灯效**：可以参考现有实现添加新效果，并通过 PR 分享。新增效果需要接入预设列表、参数及显示名称，建议同时补充测试并检查实体键盘上的表现。
+
+<details>
+<summary>灯效预设与实现代码路径</summary>
+
+以下路径均相对于项目根目录：
+
+| 内容 | 路径 |
+| --- | --- |
+| 预设分类、列表及参数能力 | [src/RSS_II_RGB.App/PresetCatalog.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/PresetCatalog.cs) |
+| 灯效标识与界面名称 | [EffectChoice.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/EffectChoice.cs)、[L.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/L.cs) |
+| 常规灯效与部分动画算法 | [PatternLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/PatternLayer.cs)、[PatternLayer.Lumo.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/PatternLayer.Lumo.cs) |
+| 按键交互灯效 | [ReactivePatternLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/ReactivePatternLayer.cs) |
+| 音乐灯效 | [MusicLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/MusicLayer.cs) 及同目录的 `MusicLayer.*.cs` |
+| 灯条与眼睛自定义效果 | [DecorationLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/DecorationLayer.cs) |
+| 效果创建与组合入口 | [src/RSS_II_RGB.App/KeyboardController.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/KeyboardController.cs) |
+| 灯效相关测试 | [tests/RSS_II_RGB.Core.Tests/](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/tree/main/tests/RSS_II_RGB.Core.Tests/)、[tests/ROG_KB_RGB_Studio.App.Tests/](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/tree/main/tests/ROG_KB_RGB_Studio.App.Tests/) |
+
+</details>
+
 ## 支持的键盘与其它选择
 
 本项目目前仅针对 **ROG Falchion Ace 75 HE（魔导士 75 HE），有线连接、ANSI 83 键配列**进行适配，不保证其它 ROG 型号或其它品牌键盘可用。

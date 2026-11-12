@@ -35,6 +35,30 @@ Most built-in presets draw inspiration from online searches, public lighting dem
 
 Effects will continue to be refined based on their appearance on the physical keyboard. Feedback and new ideas are welcome.
 
+## Want more effects?
+
+- **Find animations**: open the in-app **ATK lighting gallery** to browse, preview and import keyframe animations matching your keyboard layout.
+- **Share an idea**: submit a PR with an effect description document or implementation. Description-only PRs are welcome: include a reference video or GIF, colors, motion, triggers and adjustable parameters you would like, so the effect can be discussed and implemented.
+- **Write your own**: use existing effects as references and share your implementation through a PR. Connect new effects to the preset list, parameters and display names; include tests and check their appearance on a physical keyboard where possible.
+
+<details>
+<summary>Preset and effect source paths</summary>
+
+All paths are relative to the project root:
+
+| Content | Path |
+| --- | --- |
+| Preset categories, lists and parameter capabilities | [src/RSS_II_RGB.App/PresetCatalog.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/PresetCatalog.cs) |
+| Effect identifiers and display names | [EffectChoice.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/EffectChoice.cs), [L.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/L.cs) |
+| Regular effects and some animation algorithms | [PatternLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/PatternLayer.cs), [PatternLayer.Lumo.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/PatternLayer.Lumo.cs) |
+| Key-reactive effects | [ReactivePatternLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/ReactivePatternLayer.cs) |
+| Music effects | [MusicLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/MusicLayer.cs) and sibling `MusicLayer.*.cs` files |
+| Custom strip and eye effects | [DecorationLayer.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.Core/Effects/Layers/DecorationLayer.cs) |
+| Effect creation and composition | [src/RSS_II_RGB.App/KeyboardController.cs](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/blob/main/src/RSS_II_RGB.App/KeyboardController.cs) |
+| Effect tests | [tests/RSS_II_RGB.Core.Tests/](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/tree/main/tests/RSS_II_RGB.Core.Tests/), [tests/ROG_KB_RGB_Studio.App.Tests/](https://github.com/QKqiuku/ROG-KB-RGB-Studio-FachionACE75HE/tree/main/tests/ROG_KB_RGB_Studio.App.Tests/) |
+
+</details>
+
 ## Supported keyboard and alternatives
 
 This project currently targets only the **wired ROG Falchion Ace 75 HE with the ANSI 83-key layout**. Compatibility with other ROG models or keyboard brands is not guaranteed.
